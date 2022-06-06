@@ -18,7 +18,17 @@ try:
 
     gym.envs.registration.register(
         id="MemMaze-9x9-v0",
-        entry_point=functools.partial(_make_gym_env, ctor=tasks.test_maze)
+        entry_point=functools.partial(
+            _make_gym_env,
+            ctor=tasks.test_maze
+        )
+    )
+    gym.envs.registration.register(
+        id="MemMaze-9x9-Top-v0",
+        entry_point=functools.partial(
+            _make_gym_env,
+            ctor=functools.partial(tasks.test_maze, top_camera=True)
+        )
     )
 
 

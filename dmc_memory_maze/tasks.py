@@ -11,14 +11,15 @@ from dm_control.locomotion.walkers import jumping_ball
 from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
                                       RemapObservationWrapper)
 
-_CONTROL_TIMESTEP = 0.020    # From jumping_ball_test  # DEFAULT_CONTROL_TIMESTEP = 0.025
+_CONTROL_TIMESTEP = 0.050    # From jumping_ball_test  # DEFAULT_CONTROL_TIMESTEP = 0.025
 _PHYSICS_TIMESTEP = 0.005    # From jumping_ball_test  # DEFAULT_PHYSICS_TIMESTEP = 0.001
 
 
-def test_maze(discrete_actions=True, random_state=None):
+def test_maze(discrete_actions=True, random_state=None, top_camera=False):
 
     walker = jumping_ball.RollingBallWithHead(
-        observable_options={'egocentric_camera': dict(enabled=True)}
+        camera_height=-0.2,
+        add_ears=top_camera
     )
 
     # Build a maze with rooms and targets.
@@ -26,14 +27,15 @@ def test_maze(discrete_actions=True, random_state=None):
     arena = mazes.RandomMazeWithTargets(
         x_cells=11,
         y_cells=11,
-        xy_scale=.5,
-        z_height=.3,
+        xy_scale=1.0,
+        z_height=0.6,
         max_rooms=4,
         room_min_size=4,
         room_max_size=5,
         spawns_per_room=1,
         targets_per_room=3,
         wall_textures=wall_textures,
+        skybox_texture=None,  # TODO: remove clouds
         aesthetic='outdoor_natural')
 
     # Build a task that rewards the agent for obtaining targets.
@@ -48,15 +50,21 @@ def test_maze(discrete_actions=True, random_state=None):
             rgb2=(0, 0, 0.7)),
         target_reward_scale=50.,
         contact_termination=False,
+        # enable_global_task_observables=True,  # TODO: this property exists in superclass
         physics_timestep=_PHYSICS_TIMESTEP,
         control_timestep=_CONTROL_TIMESTEP)
 
-    env = composer.Environment(time_limit=30,
-                               task=task,
-                               random_state=random_state,
-                               strip_singleton_obs_buffer_dim=True)
+    if top_camera:
+        task.observables['top_camera'].enabled = True
 
-    env = RemapObservationWrapper(env, {'image': 'walker/egocentric_camera'})
+    env = composer.Environment(
+        time_limit=30,
+        task=task,
+        random_state=random_state,
+        strip_singleton_obs_buffer_dim=True)
+
+    camera_key = 'walker/egocentric_camera' if not top_camera else 'top_camera'
+    env = RemapObservationWrapper(env, {'image': camera_key})
 
     if discrete_actions:
         env = DiscreteActionSetWrapper(env, [
