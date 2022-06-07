@@ -11,7 +11,7 @@ from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
                                       RemapObservationWrapper)
 from dmc_memory_maze.maze import MemoryMaze
 
-def test_maze(discrete_actions=True, random_state=None, top_camera=False):
+def test_maze(discrete_actions=True, random_state=None, top_camera=False, low_walls=False):
 
     walker = jumping_ball.RollingBallWithHead(
         camera_height=0,
@@ -24,7 +24,7 @@ def test_maze(discrete_actions=True, random_state=None, top_camera=False):
         x_cells=11,
         y_cells=11,
         xy_scale=2.0,
-        z_height=1.2,
+        z_height=1.2 if not low_walls else 0.4,
         max_rooms=4,
         room_min_size=4,
         room_max_size=5,
