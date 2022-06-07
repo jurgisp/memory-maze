@@ -34,14 +34,28 @@ def test_maze(discrete_actions=True, random_state=None, top_camera=False, low_wa
         skybox_texture=None,  # TODO: remove clouds
         aesthetic='outdoor_natural')
 
-    # Build a task that rewards the agent for obtaining targets.
+    # Custom memory maze task
     task = MemoryMaze(
         walker=walker,
         maze_arena=arena,
+        n_targets=3,
         target_reward_scale=1.,
-        contact_termination=False,
-        enable_global_task_observables=True,
-        )
+        enable_global_task_observables=True)
+
+    # Built-in task
+    # task = random_goal_maze.ManyGoalsMaze(
+    #     walker=walker,
+    #     maze_arena=arena,
+    #     target_builder=functools.partial(
+    #         target_sphere.TargetSphere,
+    #         radius=0.3,
+    #         height_above_ground=.3,
+    #         rgb1=(0, 0, 0.4),
+    #         rgb2=(0, 0, 0.7)),
+    #     target_reward_scale=1.,
+    #     contact_termination=False,
+    #     physics_timestep=0.005,
+    #     control_timestep=0.050)
 
     if top_camera:
         task.observables['top_camera'].enabled = True

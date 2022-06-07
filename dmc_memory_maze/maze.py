@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.random import RandomState
 from dm_control import mjcf
 from dm_control.composer.observation import observable as observable_lib
 from dm_control.locomotion.props import target_sphere
@@ -7,6 +8,15 @@ from dm_control.locomotion.tasks import random_goal_maze
 DEFAULT_CONTROL_TIMESTEP = 0.050    # From jumping_ball_test  # DEFAULT_CONTROL_TIMESTEP = 0.025
 DEFAULT_PHYSICS_TIMESTEP = 0.005    # From jumping_ball_test  # DEFAULT_PHYSICS_TIMESTEP = 0.001
 
+TARGET_COLORS = [
+    np.array([1.0, 0.0, 0.0]),  # red
+    np.array([0.0, 1.0, 0.0]),  # green
+    np.array([0.0, 0.0, 1.0]),  # blue
+    np.array([0.44, 0.15, 0.76]),  # purple
+    np.array([1.00, 1.00, 0.00]),  # yellow
+    np.array([0.00, 1.00, 1.00]),  # cyan
+]
+
 
 class MemoryMaze(random_goal_maze.NullGoalMaze):
     # Adapted from dm_control.locomotion.tasks.RepeatSingleGoalMaze
@@ -14,14 +24,8 @@ class MemoryMaze(random_goal_maze.NullGoalMaze):
     def __init__(self,
                  walker,
                  maze_arena,
-                 target=None,
+                 n_targets=3,
                  target_reward_scale=1.0,
-                 randomize_spawn_position=True,
-                 randomize_spawn_rotation=True,
-                 rotation_bias_factor=0,
-                 aliveness_reward=0.0,
-                 aliveness_threshold=-0.5,
-                 contact_termination=True,
                  enable_global_task_observables=False,
                  physics_timestep=DEFAULT_PHYSICS_TIMESTEP,
                  control_timestep=DEFAULT_CONTROL_TIMESTEP,
@@ -29,63 +33,81 @@ class MemoryMaze(random_goal_maze.NullGoalMaze):
         super().__init__(
             walker=walker,
             maze_arena=maze_arena,
-            randomize_spawn_position=randomize_spawn_position,
-            randomize_spawn_rotation=randomize_spawn_rotation,
-            rotation_bias_factor=rotation_bias_factor,
-            aliveness_reward=aliveness_reward,
-            aliveness_threshold=aliveness_threshold,
-            contact_termination=contact_termination,
+            randomize_spawn_position=True,
+            randomize_spawn_rotation=True,
+            contact_termination=False,
             enable_global_task_observables=enable_global_task_observables,
             physics_timestep=physics_timestep,
             control_timestep=control_timestep)
-        if target is None:
-            target = target_sphere.TargetSphere()
-        self._target = target
-        self._rewarded_this_step = False
-        self._maze_arena.attach(target)
         self._target_reward_scale = target_reward_scale
-        self._targets_obtained = 0
-
-        if enable_global_task_observables:
-            xpos_origin_callable = lambda phys: phys.bind(walker.root_body).xpos
-
-            def _target_pos(physics, target=target):
-                return physics.bind(target.geom).xpos
-
-            walker.observables.add_egocentric_vector(
-                'target_0',
-                observable_lib.Generic(_target_pos),
-                origin_callable=xpos_origin_callable)
-
-    def initialize_episode_mjcf(self, random_state):
-        super().initialize_episode_mjcf(random_state)
-        ix = random_state.randint(0, len(self._maze_arena.target_positions))
-        self._target_position = self._maze_arena.target_positions[ix]
-        mjcf.get_attachment_frame(self._target.mjcf_model).pos = self._target_position
-
-    def initialize_episode(self, physics, random_state):
-        super().initialize_episode(physics, random_state)
+        self._targets = []
+        for i in range(n_targets):
+            color = TARGET_COLORS[i]
+            target = target_sphere.TargetSphere(
+                radius=0.3,
+                height_above_ground=0.3,
+                rgb1=tuple(color * 0.7),
+                rgb2=tuple(color * 0.4),
+            )
+            self._targets.append(target)
+            self._maze_arena.attach(target)
+        self._current_target_ix = 0
         self._rewarded_this_step = False
         self._targets_obtained = 0
 
-    def after_step(self, physics, random_state):
-        super().after_step(physics, random_state)
-        if self._target.activated:
-            self._rewarded_this_step = True
-            self._targets_obtained += 1
-            self._respawn(physics, random_state)
-            self._target.reset(physics)
-        else:
-            self._rewarded_this_step = False
+        # if enable_global_task_observables:  # TODO: probe vectors
+        #     xpos_origin_callable = lambda phys: phys.bind(walker.root_body).xpos
+
+        #     def _target_pos(physics, target=target):
+        #         return physics.bind(target.geom).xpos
+
+        #     walker.observables.add_egocentric_vector(
+        #         'target_0',
+        #         observable_lib.Generic(_target_pos),
+        #         origin_callable=xpos_origin_callable)
+
+    def initialize_episode_mjcf(self, rng: RandomState):
+        super().initialize_episode_mjcf(rng)
+        self._place_targets(rng)
+        self._pick_new_target(rng)
+
+    def initialize_episode(self, physics, rng: RandomState):
+        super().initialize_episode(physics, rng)
+        self._rewarded_this_step = False
+        self._targets_obtained = 0
+
+    def after_step(self, physics, rng: RandomState):
+        super().after_step(physics, rng)
+        self._rewarded_this_step = False
+        for i, target in enumerate(self._targets):
+            if target.activated:
+                if i == self._current_target_ix:
+                    self._rewarded_this_step = True
+                    self._targets_obtained += 1
+                    self._pick_new_target(rng)
+                target.reset(physics)  # Resets activated=False
 
     def should_terminate_episode(self, physics):
-        if super().should_terminate_episode(physics):
-            return True
+        return super().should_terminate_episode(physics)
 
     def get_reward(self, physics):
-        del physics
         if self._rewarded_this_step:
-            target_reward = self._target_reward_scale
-        else:
-            target_reward = 0.0
-        return target_reward + self._aliveness_reward
+            return self._target_reward_scale
+        return 0.0
+
+    def _place_targets(self, rng: RandomState):
+        possible_positions = list(self._maze_arena.target_positions)
+        rng.shuffle(possible_positions)
+        if len(possible_positions) < len(self._targets):
+            raise Exception("Not enough positions - can we regenerate the maze?")
+        for target, pos in zip(self._targets, possible_positions):
+            mjcf.get_attachment_frame(target.mjcf_model).pos = pos
+
+    def _pick_new_target(self, rng: RandomState):
+        while True:
+            ix = rng.randint(len(self._targets))
+            if self._targets[ix].activated:
+                continue  # Skip the target that the agent is touching
+            self._current_target_ix = ix
+            break
+        print(f'Next target: {self._current_target_ix}')
