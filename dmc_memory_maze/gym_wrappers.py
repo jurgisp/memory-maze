@@ -1,7 +1,7 @@
 from typing import Any, Tuple
 
 import dm_env
-import gym  # TODO: make sure gym import is optional
+import gym
 from dm_env import specs
 from gym import spaces
 
