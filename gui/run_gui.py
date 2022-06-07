@@ -9,9 +9,12 @@ import pygame
 import pygame.freetype
 from PIL import Image
 
+PANEL_LEFT = 250
+PANEL_RIGHT = 250
+FULL_SCREEN = True   # Full screen to force focus
+
 K_NONE = 0
 HOLD_ACTION = True
-PANEL_WIDTH = 250
 
 def get_keymap(env):
     return {
@@ -32,7 +35,7 @@ def main():
     parser.add_argument('--record', type=str, default=None)
     args = parser.parse_args()
     render_size = args.size
-    window_size = (render_size[0] + PANEL_WIDTH, render_size[1])
+    window_size = (render_size[0] + PANEL_LEFT + PANEL_RIGHT, render_size[1])
 
     print(f'Creating environment: {args.env}')
     env = gym.make(args.env, disable_env_checker=True)
@@ -47,7 +50,8 @@ def main():
     obs = env.reset()
 
     pygame.init()
-    screen = pygame.display.set_mode(window_size)
+    screen = pygame.display.set_mode(window_size, pygame.FULLSCREEN if FULL_SCREEN else 0)
+    # pygame.display.toggle_fullscreen()
     clock = pygame.time.Clock()
     font = pygame.freetype.SysFont('Mono', 16)
     fontsmall = pygame.freetype.SysFont('Mono', 12)
@@ -68,14 +72,14 @@ def main():
         image = image.resize(render_size, resample=0)
         image = np.array(image)
         surface = pygame.surfarray.make_surface(image.transpose((1, 0, 2)))
-        screen.blit(surface, (0, 0))
+        screen.blit(surface, (PANEL_LEFT, 0))
 
         # Render statistics
         lines = obs_to_text(obs, env, steps, return_)
         y = 5
         for line in lines:
             text_surface, rect = font.render(line, (255, 255, 255))
-            screen.blit(text_surface, (render_size[0] + 16, y))
+            screen.blit(text_surface, (16, y))
             y += font.size + 2  # type: ignore
 
         # # Render keymap help
@@ -92,21 +96,21 @@ def main():
         # Keyboard input
 
         action = None
+        force_reset = False
         pygame.event.pump()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                # Window close
+            if event.type == pygame.QUIT:  # Window close
                 running = False
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                # Quit
-                running = False
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
-                # Pause
-                paused = not paused
-                print('paused' if paused else 'unpaused')
-            elif event.type == pygame.KEYDOWN and event.key in keymap.keys():
-                # Action key down
-                action = keymap[event.key]
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:  # Quit
+                    running = False
+                if event.key == pygame.K_p:  # Pause
+                    paused = not paused
+                if event.key == pygame.K_BACKSPACE:  # Force reset
+                    force_reset = True
+                if event.key in keymap.keys():  # Action key
+                    # Action key down
+                    action = keymap[event.key]
         
         pressed = pygame.key.get_pressed()
         if action is None:
@@ -136,9 +140,9 @@ def main():
         # Episode end
 
         if reward or done:
-            print(f'Reward: {reward}  done: {done}  info: {info}')
-        if done:
-            print(f'Episode done: {episode}  Length: {steps}  Return: {return_}')
+            print(f'reward: {reward}  done: {done}  info: {info}')
+        if done or force_reset:
+            print(f'Episode done - length: {steps}  return: {return_}')
             obs = env.reset()
             steps = 0
             return_ = 0
