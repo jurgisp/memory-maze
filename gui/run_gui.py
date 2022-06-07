@@ -11,19 +11,20 @@ from PIL import Image
 
 PANEL_LEFT = 250
 PANEL_RIGHT = 250
-FULL_SCREEN = True   # Full screen to force focus
 
 K_NONE = 0
-HOLD_ACTION = True
+
 
 def get_keymap(env):
     return {
-        K_NONE: 0,
-        pygame.K_UP: 1,
-        pygame.K_LEFT: 2,
-        pygame.K_RIGHT: 3,
-        pygame.K_DOWN: 4,
+        tuple(): 0,
+        (pygame.K_UP, ): 1,
+        (pygame.K_LEFT, ): 2,
+        (pygame.K_RIGHT, ): 3,
+        (pygame.K_UP, pygame.K_LEFT): 4,
+        (pygame.K_UP, pygame.K_RIGHT): 5,
     }
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -32,6 +33,7 @@ def main():
     parser.add_argument('--fps', type=int, default=10)
     parser.add_argument('--random', type=float, default=0.0)
     parser.add_argument('--noreset', action='store_true')
+    parser.add_argument('--nofullscreen', action='store_true')
     parser.add_argument('--record', type=str, default=None)
     args = parser.parse_args()
     render_size = args.size
@@ -41,7 +43,7 @@ def main():
     env = gym.make(args.env, disable_env_checker=True)
     # if args.record:
     #     env = Recorder(env, args.record)  # TODO
-    
+
     keymap = get_keymap(env)
 
     steps = 0
@@ -50,7 +52,8 @@ def main():
     obs = env.reset()
 
     pygame.init()
-    screen = pygame.display.set_mode(window_size, pygame.FULLSCREEN if FULL_SCREEN else 0)
+    full_screen = not args.nofullscreen  # Full screen to force focus
+    screen = pygame.display.set_mode(window_size, pygame.FULLSCREEN if full_screen else 0)
     # pygame.display.toggle_fullscreen()
     clock = pygame.time.Clock()
     font = pygame.freetype.SysFont('Mono', 16)
@@ -95,7 +98,6 @@ def main():
 
         # Keyboard input
 
-        action = None
         force_reset = False
         pygame.event.pump()
         for event in pygame.event.get():
@@ -108,19 +110,16 @@ def main():
                     paused = not paused
                 if event.key == pygame.K_BACKSPACE:  # Force reset
                     force_reset = True
-                if event.key in keymap.keys():  # Action key
-                    # Action key down
-                    action = keymap[event.key]
-        
+                # if event.key in keymap.keys():  # Action key
+                #     # Action key down
+                #     action = keymap[event.key]
+
         pressed = pygame.key.get_pressed()
-        if action is None:
-            action = keymap[K_NONE]  # noop
-            if HOLD_ACTION:
-                for key, act in keymap.items():
-                    if pressed[key]:
-                        # Action key hold
-                        action = act
-                        break
+        action = keymap[tuple()]  # noop
+        for keys, act in keymap.items():
+            if all(pressed[key] for key in keys):
+                # The last keymap entry which has all keys pressed wins
+                action = act
 
         speedup = pressed[pygame.K_TAB]
 
@@ -132,7 +131,7 @@ def main():
         if args.random:
             if np.random.random() < args.random:
                 action = env.action_space.sample()
-        
+
         obs, reward, done, info = env.step(action)
         steps += 1
         return_ += reward
@@ -149,6 +148,7 @@ def main():
             episode += 1
 
     pygame.quit()
+
 
 def obs_to_text(obs, env, steps, return_):
     kvs = []

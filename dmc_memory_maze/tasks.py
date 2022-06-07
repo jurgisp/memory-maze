@@ -58,10 +58,11 @@ def test_maze(discrete_actions=True, random_state=None, top_camera=False, low_wa
     if discrete_actions:
         env = DiscreteActionSetWrapper(env, [
             np.array([0., 0.]),  # noop
-            np.array([-1., 0.]),  # move forward
-            np.array([0., -1.]),  # turn left
-            np.array([0., +1.]),  # turn right
-            np.array([+1., 0.]),  # move backward
+            np.array([-1., 0.]),  # forward
+            np.array([0., -1.]),  # left
+            np.array([0., +1.]),  # right
+            np.array([-1., -1.]),  # forward + left
+            np.array([-1., +1.]),  # forward + right
         ])
 
     return env
