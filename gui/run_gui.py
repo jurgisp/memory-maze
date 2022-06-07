@@ -11,6 +11,7 @@ from PIL import Image
 
 PANEL_LEFT = 250
 PANEL_RIGHT = 250
+FOCUS_HACK = True
 
 K_NONE = 0
 
@@ -33,7 +34,7 @@ def main():
     parser.add_argument('--fps', type=int, default=10)
     parser.add_argument('--random', type=float, default=0.0)
     parser.add_argument('--noreset', action='store_true')
-    parser.add_argument('--nofullscreen', action='store_true')
+    parser.add_argument('--full_screen', action='store_true')
     parser.add_argument('--record', type=str, default=None)
     args = parser.parse_args()
     render_size = args.size
@@ -52,9 +53,12 @@ def main():
     obs = env.reset()
 
     pygame.init()
-    full_screen = not args.nofullscreen  # Full screen to force focus
-    screen = pygame.display.set_mode(window_size, pygame.FULLSCREEN if full_screen else 0)
-    # pygame.display.toggle_fullscreen()
+    start_fullscreen = args.full_screen or FOCUS_HACK
+    screen = pygame.display.set_mode(window_size, pygame.FULLSCREEN if start_fullscreen else 0)
+    if FOCUS_HACK and not args.full_screen:
+        # Hack: for some reason app window doesn't get focus when launching, so
+        # we launch it as full screen and then exit full screen.
+        pygame.display.toggle_fullscreen()  
     clock = pygame.time.Clock()
     font = pygame.freetype.SysFont('Mono', 16)
     fontsmall = pygame.freetype.SysFont('Mono', 12)
@@ -98,30 +102,33 @@ def main():
 
         # Keyboard input
 
-        force_reset = False
         pygame.event.pump()
+        keys_down = defaultdict(bool)
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:  # Window close
+            if event.type == pygame.QUIT:  # Close
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:  # Quit
-                    running = False
-                if event.key == pygame.K_p:  # Pause
-                    paused = not paused
-                if event.key == pygame.K_BACKSPACE:  # Force reset
-                    force_reset = True
-                # if event.key in keymap.keys():  # Action key
-                #     # Action key down
-                #     action = keymap[event.key]
+                keys_down[event.key] = True
+        keys_hold = pygame.key.get_pressed()
 
-        pressed = pygame.key.get_pressed()
-        action = keymap[tuple()]  # noop
+        # Action keys        
+        action = keymap[tuple()]  # noop, if no keys pressed
         for keys, act in keymap.items():
-            if all(pressed[key] for key in keys):
+            if all(keys_hold[key] or keys_down[key] for key in keys):
                 # The last keymap entry which has all keys pressed wins
                 action = act
 
-        speedup = pressed[pygame.K_TAB]
+        # Special keys
+        force_reset = False
+        speedup = False
+        if keys_down[pygame.K_ESCAPE]:  # Quit
+            running = False
+        if keys_down[pygame.K_SPACE]:  # Pause
+            paused = not paused
+        if keys_down[pygame.K_BACKSPACE]:  # Force reset
+            force_reset = True
+        if keys_hold[pygame.K_TAB]:
+            speedup = True
 
         if paused:
             continue
@@ -138,10 +145,10 @@ def main():
 
         # Episode end
 
-        if reward or done:
-            print(f'reward: {reward}  done: {done}  info: {info}')
+        if reward:
+            print(f'reward: {reward}')
         if done or force_reset:
-            print(f'Episode done - length: {steps}  return: {return_}')
+            print(f'Episode done - length: {steps}  return: {return_}  info: {info}')
             obs = env.reset()
             steps = 0
             return_ = 0
