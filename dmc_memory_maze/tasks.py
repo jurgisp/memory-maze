@@ -7,11 +7,18 @@ from dm_control.locomotion.props import target_sphere
 from dm_control.locomotion.tasks import random_goal_maze
 from dm_control.locomotion.walkers import jumping_ball
 
-from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
-                                      RemapObservationWrapper)
 from dmc_memory_maze.maze import MemoryMaze
+from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
+                                      RemapObservationWrapper,
+                                      TargetColorAsBorderWrapper)
 
-def test_maze(discrete_actions=True, random_state=None, top_camera=False, good_visibility=False):
+
+def test_maze(discrete_actions=True,
+              random_state=None, 
+              target_color_in_image=True,
+              top_camera=False, 
+              good_visibility=False,
+              ):
 
     walker = jumping_ball.RollingBallWithHead(
         camera_height=0,
@@ -67,7 +74,13 @@ def test_maze(discrete_actions=True, random_state=None, top_camera=False, good_v
         strip_singleton_obs_buffer_dim=True)
 
     camera_key = 'walker/egocentric_camera' if not top_camera else 'top_camera'
-    env = RemapObservationWrapper(env, {'image': camera_key})
+    env = RemapObservationWrapper(env, {
+        'image': camera_key,
+        'target_color': 'target_color',
+    })
+
+    if target_color_in_image:
+        env = TargetColorAsBorderWrapper(env)
 
     if discrete_actions:
         env = DiscreteActionSetWrapper(env, [

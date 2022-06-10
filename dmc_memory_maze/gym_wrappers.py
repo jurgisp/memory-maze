@@ -1,4 +1,5 @@
 from typing import Any, Tuple
+import numpy as np
 
 import dm_env
 import gym
@@ -41,6 +42,13 @@ def _convert_to_space(spec: Any) -> gym.Space:
             dtype=spec.dtype,
             low=spec.minimum.item() if len(spec.minimum.shape) == 0 else spec.minimum,
             high=spec.maximum.item() if len(spec.maximum.shape) == 0 else spec.maximum)
+    
+    if isinstance(spec, specs.Array):
+        return spaces.Box(
+            shape=spec.shape,
+            dtype=spec.dtype,
+            low=-np.inf,
+            high=np.inf)
 
     if isinstance(spec, tuple):
         return spaces.Tuple(_convert_to_space(s) for s in spec)

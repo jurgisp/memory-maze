@@ -1,9 +1,9 @@
 import numpy as np
-from numpy.random import RandomState
 from dm_control import mjcf
 from dm_control.composer.observation import observable as observable_lib
 from dm_control.locomotion.props import target_sphere
 from dm_control.locomotion.tasks import random_goal_maze
+from numpy.random import RandomState
 
 DEFAULT_CONTROL_TIMESTEP = 0.050    # From jumping_ball_test  # DEFAULT_CONTROL_TIMESTEP = 0.025
 DEFAULT_PHYSICS_TIMESTEP = 0.005    # From jumping_ball_test  # DEFAULT_PHYSICS_TIMESTEP = 0.001
@@ -39,7 +39,8 @@ class MemoryMaze(random_goal_maze.NullGoalMaze):
             contact_termination=False,
             enable_global_task_observables=enable_global_task_observables,
             physics_timestep=physics_timestep,
-            control_timestep=control_timestep)
+            control_timestep=control_timestep
+        )
         self._target_reward_scale = target_reward_scale
         self._targets = []
         for i in range(n_targets):
@@ -67,6 +68,20 @@ class MemoryMaze(random_goal_maze.NullGoalMaze):
         #         observable_lib.Generic(_target_pos),
         #         origin_callable=xpos_origin_callable)
 
+        self._task_observables = super().task_observables
+        target_color_obs = observable_lib.Generic(
+            lambda _: TARGET_COLORS[self._current_target_ix])
+        target_color_obs.enabled = True
+        self._task_observables['target_color'] = target_color_obs
+
+    @property
+    def task_observables(self):
+        return self._task_observables
+
+    @property
+    def name(self):
+        return 'memory_maze'
+
     def initialize_episode_mjcf(self, rng: RandomState):
         super().initialize_episode_mjcf(rng)
         while True:
@@ -74,7 +89,7 @@ class MemoryMaze(random_goal_maze.NullGoalMaze):
             if not ok:
                 # Could not place targets - regenerate the maze
                 self._maze_arena.regenerate()
-                continue  
+                continue
             break
         self._pick_new_target(rng)
 
@@ -119,4 +134,3 @@ class MemoryMaze(random_goal_maze.NullGoalMaze):
                 continue  # Skip the target that the agent is touching
             self._current_target_ix = ix
             break
-        print(f'Next target: {self._current_target_ix}')

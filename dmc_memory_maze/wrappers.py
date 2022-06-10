@@ -3,11 +3,12 @@
 from typing import Any, Dict, List
 
 import dm_env
-from dm_env.specs import DiscreteArray
 import numpy as np
+from dm_env.specs import DiscreteArray
 
 
 class Wrapper(dm_env.Environment):
+    """Base class for dm_env.Environment wrapper."""
 
     def __init__(self, env: dm_env.Environment):
         self.env = env
@@ -40,6 +41,7 @@ class Wrapper(dm_env.Environment):
 
 
 class ObservationWrapper(Wrapper):
+    """Base class for observation wrapper."""
 
     def observation_spec(self):
         raise NotImplementedError
@@ -83,3 +85,25 @@ class DiscreteActionSetWrapper(Wrapper):
 
     def step(self, action) -> dm_env.TimeStep:
         return self.env.step(self.action_set[action])
+
+
+class TargetColorAsBorderWrapper(ObservationWrapper):
+
+    def observation_spec(self):
+        spec = self.env.observation_spec()
+        assert isinstance(spec, dict)
+        assert 'target_color' in spec
+        spec.pop('target_color')
+        return spec
+
+    def observation(self, obs):
+        assert isinstance(obs, dict)
+        assert 'target_color' in obs and 'image' in obs
+        target_color = obs.pop('target_color')
+        img = obs['image']
+        B = 2
+        img[:, :B] = target_color * 255 * 0.7
+        img[:, -B:] = target_color * 255 * 0.7
+        img[:B, :] = target_color * 255 * 0.7
+        img[-B:, :] = target_color * 255 * 0.7
+        return obs
