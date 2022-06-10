@@ -69,7 +69,13 @@ class MemoryMaze(random_goal_maze.NullGoalMaze):
 
     def initialize_episode_mjcf(self, rng: RandomState):
         super().initialize_episode_mjcf(rng)
-        self._place_targets(rng)
+        while True:
+            ok = self._place_targets(rng)
+            if not ok:
+                # Could not place targets - regenerate the maze
+                self._maze_arena.regenerate()
+                continue  
+            break
         self._pick_new_target(rng)
 
     def initialize_episode(self, physics, rng: RandomState):
@@ -96,13 +102,15 @@ class MemoryMaze(random_goal_maze.NullGoalMaze):
             return self._target_reward_scale
         return 0.0
 
-    def _place_targets(self, rng: RandomState):
+    def _place_targets(self, rng: RandomState) -> bool:
         possible_positions = list(self._maze_arena.target_positions)
         rng.shuffle(possible_positions)
         if len(possible_positions) < len(self._targets):
-            raise Exception("Not enough positions - can we regenerate the maze?")
+            # Too few rooms - need to regenerate the maze
+            return False
         for target, pos in zip(self._targets, possible_positions):
             mjcf.get_attachment_frame(target.mjcf_model).pos = pos
+        return True
 
     def _pick_new_target(self, rng: RandomState):
         while True:
