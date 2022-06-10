@@ -19,7 +19,7 @@ try:
 
     register(id="MemMaze-9x9-v0", entry_point=f(_make_gym_env, tasks.test_maze))
     register(id="MemMaze-9x9-Top-v0", entry_point=f(_make_gym_env, tasks.test_maze, top_camera=True))
-    register(id="MemMaze-9x9-Low-v0", entry_point=f(_make_gym_env, tasks.test_maze, low_walls=True))
+    register(id="MemMaze-9x9-Vis-v0", entry_point=f(_make_gym_env, tasks.test_maze, good_visibility=True))
 
 
 except ImportError:
