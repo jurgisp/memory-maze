@@ -1,5 +1,3 @@
-import functools
-
 import numpy as np
 from dm_control import composer
 from dm_control.locomotion.arenas import labmaze_textures, mazes
@@ -13,12 +11,13 @@ from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
                                       TargetColorAsBorderWrapper)
 
 
-def test_maze(discrete_actions=True,
-              random_state=None, 
-              target_color_in_image=True,
-              top_camera=False, 
-              good_visibility=False,
-              ):
+def memory_maze_9x9(discrete_actions=True,
+                    random_state=None,
+                    target_color_in_image=True,
+                    top_camera=False,
+                    good_visibility=False,
+                    control_fps=10,
+                    ):
 
     walker = jumping_ball.RollingBallWithHead(
         camera_height=0,
@@ -39,7 +38,8 @@ def test_maze(discrete_actions=True,
         targets_per_room=1,
         wall_textures=wall_textures,
         skybox_texture=None,  # TODO: remove clouds
-        aesthetic='outdoor_natural')
+        aesthetic='outdoor_natural',
+    )
 
     # Custom memory maze task
     task = MemoryMaze(
@@ -47,7 +47,9 @@ def test_maze(discrete_actions=True,
         maze_arena=arena,
         n_targets=3,
         target_radius=0.3 if not good_visibility else 0.5,
-        enable_global_task_observables=True)
+        enable_global_task_observables=True,
+        control_timestep=1.0 / control_fps
+    )
 
     # Built-in task
     # task = random_goal_maze.ManyGoalsMaze(
@@ -68,7 +70,7 @@ def test_maze(discrete_actions=True,
         task.observables['top_camera'].enabled = True
 
     env = composer.Environment(
-        time_limit=30,
+        time_limit=100 - 1e-3,  # subtract epsilon to make sure ep_length=time_limit*fps
         task=task,
         random_state=random_state,
         strip_singleton_obs_buffer_dim=True)

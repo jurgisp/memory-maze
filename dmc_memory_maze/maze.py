@@ -5,8 +5,8 @@ from dm_control.locomotion.props import target_sphere
 from dm_control.locomotion.tasks import random_goal_maze
 from numpy.random import RandomState
 
-DEFAULT_CONTROL_TIMESTEP = 0.050    # From jumping_ball_test  # DEFAULT_CONTROL_TIMESTEP = 0.025
-DEFAULT_PHYSICS_TIMESTEP = 0.005    # From jumping_ball_test  # DEFAULT_PHYSICS_TIMESTEP = 0.001
+DEFAULT_CONTROL_TIMESTEP = 0.025
+DEFAULT_PHYSICS_TIMESTEP = 0.005
 
 TARGET_COLORS = [
     np.array([1.0, 0.0, 0.0]),  # red

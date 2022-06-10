@@ -17,9 +17,9 @@ try:
         dmenv = dm_task(**kwargs)
         return GymWrapper(dmenv)
 
-    register(id="MemMaze-9x9-v0", entry_point=f(_make_gym_env, tasks.test_maze))
-    register(id="MemMaze-9x9-Top-v0", entry_point=f(_make_gym_env, tasks.test_maze, top_camera=True))
-    register(id="MemMaze-9x9-Vis-v0", entry_point=f(_make_gym_env, tasks.test_maze, good_visibility=True))
+    register(id="MemoryMaze-9x9-v0", entry_point=f(_make_gym_env, tasks.memory_maze_9x9))
+    register(id="MemoryMaze-9x9-Top-v0", entry_point=f(_make_gym_env, tasks.memory_maze_9x9, top_camera=True))
+    register(id="MemoryMaze-9x9-Vis-v0", entry_point=f(_make_gym_env, tasks.memory_maze_9x9, good_visibility=True))
 
 
 except ImportError:
