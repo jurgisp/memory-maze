@@ -28,9 +28,11 @@ try:
         register(id=f'MemoryMaze-{key}-v0', entry_point=f(_make_gym_env, dm_task))
         register(id=f'MemoryMaze-{key}-Vis-v0', entry_point=f(_make_gym_env, dm_task, good_visibility=True))
         register(id=f'MemoryMaze-{key}-Top-v0', entry_point=f(_make_gym_env, dm_task, top_camera=True))
+        register(id=f'MemoryMaze-{key}-HD-v0', entry_point=f(_make_gym_env, dm_task, camera_resolution=256))
         register(id=f'MemoryMaze-{key}-HiFreq-v0', entry_point=f(_make_gym_env, dm_task, control_freq=40))
         register(id=f'MemoryMaze-{key}-HiFreq-Vis-v0', entry_point=f(_make_gym_env, dm_task, good_visibility=True, control_freq=40))
         register(id=f'MemoryMaze-{key}-HiFreq-Top-v0', entry_point=f(_make_gym_env, dm_task, top_camera=True, control_freq=40))
+        register(id=f'MemoryMaze-{key}-HiFreq-HD-v0', entry_point=f(_make_gym_env, dm_task, control_freq=40, camera_resolution=256))
 
 
 except ImportError:

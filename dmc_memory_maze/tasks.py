@@ -56,6 +56,7 @@ def _memory_maze(
     target_color_in_image=True,
     top_camera=False,
     good_visibility=False,
+    camera_resolution=64,
     random_state=None,
 ):
     walker = RollingBallWithFriction(camera_height=0, add_ears=top_camera)
@@ -81,7 +82,8 @@ def _memory_maze(
         n_targets=n_targets,
         target_radius=0.5 if good_visibility or top_camera else 0.25,
         enable_global_task_observables=True,
-        control_timestep=1.0 / control_freq
+        control_timestep=1.0 / control_freq,
+        camera_resolution=camera_resolution,
     )
 
     if top_camera:

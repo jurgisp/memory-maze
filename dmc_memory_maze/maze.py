@@ -44,6 +44,7 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
                  target_radius=0.3,
                  target_reward_scale=1.0,
                  enable_global_task_observables=False,
+                 camera_resolution=64,
                  physics_timestep=DEFAULT_PHYSICS_TIMESTEP,
                  control_timestep=DEFAULT_CONTROL_TIMESTEP,
                  ):
@@ -89,6 +90,9 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
             lambda _: TARGET_COLORS[self._current_target_ix])
         target_color_obs.enabled = True
         self._task_observables['target_color'] = target_color_obs
+
+        self._walker.observables.egocentric_camera.height = camera_resolution
+        self._walker.observables.egocentric_camera.width = camera_resolution
 
     @property
     def task_observables(self):
