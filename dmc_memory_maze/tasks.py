@@ -1,8 +1,9 @@
 import numpy as np
 from dm_control import composer
-from dm_control.locomotion.arenas import labmaze_textures, mazes
+from dm_control.locomotion.arenas import labmaze_textures
 
-from dmc_memory_maze.maze import MemoryMaze, RollingBallWithFriction
+from dmc_memory_maze.maze import (FixedWallTexture, MazeWithTargetsArena,
+                                  MemoryMazeTask, RollingBallWithFriction)
 from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
                                       RemapObservationWrapper,
                                       TargetColorAsBorderWrapper)
@@ -59,9 +60,8 @@ def _memory_maze(
 ):
     walker = RollingBallWithFriction(camera_height=0, add_ears=top_camera)
 
-    wall_textures = labmaze_textures.WallTextures(style='style_01')
-    arena = mazes.RandomMazeWithTargets(
-        x_cells=maze_size + 2,
+    arena = MazeWithTargetsArena(
+        x_cells=maze_size + 2,  # inner size => outer size
         y_cells=maze_size + 2,
         xy_scale=2.0,
         z_height=1.2 if not good_visibility else 0.4,
@@ -70,35 +70,19 @@ def _memory_maze(
         room_max_size=room_max_size,
         spawns_per_room=1,
         targets_per_room=1,
-        wall_textures=wall_textures,
-        skybox_texture=None,  # TODO: remove clouds
-        aesthetic='outdoor_natural',
+        floor_textures=labmaze_textures.FloorTextures('style_04'),
+        wall_textures=FixedWallTexture('style_05', 'yellow'),
+        skybox_texture=None,
     )
 
-    # Custom memory maze task
-    task = MemoryMaze(
+    task = MemoryMazeTask(
         walker=walker,
         maze_arena=arena,
         n_targets=n_targets,
-        target_radius=0.25 if not good_visibility else 0.5,
+        target_radius=0.5 if good_visibility or top_camera else 0.25,
         enable_global_task_observables=True,
         control_timestep=1.0 / control_freq
     )
-
-    # Built-in task
-    # task = random_goal_maze.ManyGoalsMaze(
-    #     walker=walker,
-    #     maze_arena=arena,
-    #     target_builder=functools.partial(
-    #         target_sphere.TargetSphere,
-    #         radius=0.3,
-    #         height_above_ground=.3,
-    #         rgb1=(0, 0, 0.4),
-    #         rgb2=(0, 0, 0.7)),
-    #     target_reward_scale=1.,
-    #     contact_termination=False,
-    #     physics_timestep=0.005,
-    #     control_timestep=0.050)
 
     if top_camera:
         task.observables['top_camera'].enabled = True

@@ -1,9 +1,14 @@
+import string
+
+import labmaze
 import numpy as np
 from dm_control import mjcf
 from dm_control.composer.observation import observable as observable_lib
+from dm_control.locomotion.arenas import covering, labmaze_textures, mazes
 from dm_control.locomotion.props import target_sphere
 from dm_control.locomotion.tasks import random_goal_maze
 from dm_control.locomotion.walkers import jumping_ball
+from labmaze import assets as labmaze_assets
 from numpy.random import RandomState
 
 DEFAULT_CONTROL_TIMESTEP = 0.025
@@ -29,7 +34,7 @@ class RollingBallWithFriction(jumping_ball.RollingBallWithHead):
         self._mjcf_root.find('joint', 'steer').damping = steer_damping
 
 
-class MemoryMaze(random_goal_maze.NullGoalMaze):
+class MemoryMazeTask(random_goal_maze.NullGoalMaze):
     # Adapted from dm_control.locomotion.tasks.RepeatSingleGoalMaze
 
     def __init__(self,
@@ -145,3 +150,112 @@ class MemoryMaze(random_goal_maze.NullGoalMaze):
                 continue  # Skip the target that the agent is touching
             self._current_target_ix = ix
             break
+
+
+class FixedWallTexture(labmaze_textures.WallTextures):
+    """Selects a single texture instead of a collection to sample from."""
+
+    def _build(self, style, texture_name):
+        labmaze_textures = labmaze_assets.get_wall_texture_paths(style)
+        self._mjcf_root = mjcf.RootElement(model='labmaze_' + style)
+        self._textures = []
+        if texture_name not in labmaze_textures:
+            raise ValueError(f'`texture_name` should be one of {labmaze_textures.keys()}: got {texture_name}')
+        texture_path = labmaze_textures[texture_name]
+        self._textures.append(self._mjcf_root.asset.add(  # type: ignore
+            'texture', type='2d', name=texture_name,
+            file=texture_path.format(texture_name)))
+
+
+class MazeWithTargetsArena(mazes.MazeWithTargets):
+    """Fork of mazes.RandomMazeWithTargets."""
+
+    def _build(self,
+               x_cells,
+               y_cells,
+               xy_scale=2.0,
+               z_height=2.0,
+               max_rooms=4,
+               room_min_size=3,
+               room_max_size=5,
+               spawns_per_room=0,
+               targets_per_room=0,
+               max_variations=26,
+               simplify=True,
+               skybox_texture=None,
+               wall_textures=None,
+               floor_textures=None,
+               aesthetic='default',
+               name='random_maze'):
+        random_seed = np.random.randint(2147483648)
+        super()._build(
+            maze=labmaze.RandomMaze(
+                height=y_cells,
+                width=x_cells,
+                max_rooms=max_rooms,
+                room_min_size=room_min_size,
+                room_max_size=room_max_size,
+                max_variations=max_variations,
+                spawns_per_room=spawns_per_room,
+                objects_per_room=targets_per_room,
+                simplify=simplify,
+                random_seed=random_seed),
+            xy_scale=xy_scale,
+            z_height=z_height,
+            skybox_texture=skybox_texture,
+            wall_textures=wall_textures,
+            floor_textures=floor_textures,
+            aesthetic=aesthetic,
+            name=name)
+
+    def _make_floor_variations(self, build_tile_geoms_fn=None):
+        """Fork of mazes.MazeWithTargets._make_floor_variations().
+
+        Makes the room floors different if possible, instead of sampling randomly.
+        """
+        _DEFAULT_FLOOR_CHAR = '.'
+
+        assert len(self._floor_textures) > 1
+        main_floor_texture = self._floor_textures[0]
+        room_floor_textures = self._floor_textures[1:]
+
+        for i_var, variation in enumerate(_DEFAULT_FLOOR_CHAR + string.ascii_uppercase):
+            if variation not in self._maze.variations_layer:
+                break
+
+            if build_tile_geoms_fn is None:
+                # Break the floor variation down to odd-sized tiles.
+                tiles = covering.make_walls(self._maze.variations_layer,
+                                            wall_char=variation,
+                                            make_odd_sized_walls=True)
+            else:
+                tiles = build_tile_geoms_fn(wall_char=variation)
+
+            if variation == _DEFAULT_FLOOR_CHAR:
+                variation_texture = main_floor_texture
+            else:
+                variation_texture = room_floor_textures[i_var % len(room_floor_textures)]
+
+            for i, tile in enumerate(tiles):
+                tile_mid = covering.GridCoordinates(
+                    (tile.start.y + tile.end.y - 1) / 2,
+                    (tile.start.x + tile.end.x - 1) / 2)
+                tile_pos = np.array([(tile_mid.x - self._x_offset) * self._xy_scale,
+                                     -(tile_mid.y - self._y_offset) * self._xy_scale,
+                                     0.0])
+                tile_size = np.array([(tile.end.x - tile_mid.x - 0.5) * self._xy_scale,
+                                      (tile.end.y - tile_mid.y - 0.5) * self._xy_scale,
+                                      self._xy_scale])
+                if variation == _DEFAULT_FLOOR_CHAR:
+                    tile_name = 'floor_{}'.format(i)
+                else:
+                    tile_name = 'floor_{}_{}'.format(variation, i)
+                self._tile_geom_names[tile.start] = tile_name
+                self._texturing_material_names.append(tile_name)
+                self._texturing_geom_names.append(tile_name)
+                material = self._mjcf_root.asset.add(
+                    'material', name=tile_name, texture=variation_texture,
+                    texrepeat=(2 * tile_size[[0, 1]] / self._xy_scale))
+                self._mjcf_root.worldbody.add(
+                    'geom', name=tile_name, type='plane', material=material,
+                    pos=tile_pos, size=tile_size, contype=0, conaffinity=0)
