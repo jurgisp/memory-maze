@@ -7,16 +7,21 @@ from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
                                       RemapObservationWrapper,
                                       TargetColorAsBorderWrapper)
 
+# Slow control (4Hz), so that agent without HRL has a chance.
+# Native control would be 40Hz, so this corresponds roughly to action_repeat=10.
+DEFAULT_CONTROL_FREQ = 4
 
 def memory_maze_9x9(**kwargs):
-    # Maze based on DMLab30-explore_goal_locations_small
-    # {
-    #     mazeHeight = 11,  # with outer walls
-    #     mazeWidth = 11,
-    #     roomCount = 4,
-    #     roomMaxSize = 5,
-    #     roomMinSize = 3,
-    # }
+    """
+    Maze based on DMLab30-explore_goal_locations_small
+    {
+        mazeHeight = 11,  # with outer walls
+        mazeWidth = 11,
+        roomCount = 4,
+        roomMaxSize = 5,
+        roomMinSize = 3,
+    }
+    """
     return _memory_maze(9, 3, 250, **kwargs)
 
 def memory_maze_11x11(**kwargs):
@@ -26,14 +31,16 @@ def memory_maze_13x13(**kwargs):
     return _memory_maze(13, 5, 750, **kwargs)
 
 def memory_maze_15x15(**kwargs):
-    # Maze based on DMLab30-explore_goal_locations_large
-    # {
-    #     mazeHeight = 17,  # with outer walls
-    #     mazeWidth = 17,
-    #     roomCount = 9,
-    #     roomMaxSize = 3,
-    #     roomMaxSize = 3,
-    # }
+    """
+    Maze based on DMLab30-explore_goal_locations_large
+    {
+        mazeHeight = 17,  # with outer walls
+        mazeWidth = 17,
+        roomCount = 9,
+        roomMaxSize = 3,
+        roomMaxSize = 3,
+    }
+    """
     return _memory_maze(15, 6, 1000, max_rooms=9, room_max_size=3, **kwargs)
 
 def _memory_maze(
@@ -43,7 +50,7 @@ def _memory_maze(
     max_rooms=6,
     room_min_size=3,
     room_max_size=5,
-    control_fps=4,
+    control_freq=DEFAULT_CONTROL_FREQ,
     discrete_actions=True,
     target_color_in_image=True,
     top_camera=False,
@@ -75,7 +82,7 @@ def _memory_maze(
         n_targets=n_targets,
         target_radius=0.25 if not good_visibility else 0.5,
         enable_global_task_observables=True,
-        control_timestep=1.0 / control_fps
+        control_timestep=1.0 / control_freq
     )
 
     # Built-in task
@@ -111,14 +118,13 @@ def _memory_maze(
         env = TargetColorAsBorderWrapper(env)
 
     if discrete_actions:
-        c = 1.0
         env = DiscreteActionSetWrapper(env, [
-            np.array([0., 0.]),  # noop
-            np.array([-c, 0.]),  # forward
-            np.array([0., -c]),  # left
-            np.array([0., +c]),  # right
-            np.array([-c, -c]),  # forward + left
-            np.array([-c, +c]),  # forward + right
+            np.array([0.0, 0.0]),  # noop
+            np.array([-1.0, 0.0]),  # forward
+            np.array([0.0, -1.0]),  # left
+            np.array([0.0, +1.0]),  # right
+            np.array([-1.0, -1.0]),  # forward + left
+            np.array([-1.0, +1.0]),  # forward + right
         ])
 
     return env
