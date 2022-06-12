@@ -8,29 +8,59 @@ from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
                                       TargetColorAsBorderWrapper)
 
 
-def memory_maze_9x9(discrete_actions=True,
-                    random_state=None,
-                    target_color_in_image=True,
-                    top_camera=False,
-                    good_visibility=False,
-                    control_fps=4,
-                    ):
+def memory_maze_9x9(**kwargs):
+    # Maze based on DMLab30-explore_goal_locations_small
+    # {
+    #     mazeHeight = 11,  # with outer walls
+    #     mazeWidth = 11,
+    #     roomCount = 4,
+    #     roomMaxSize = 5,
+    #     roomMinSize = 3,
+    # }
+    return _memory_maze(9, 3, 250, **kwargs)
 
-    walker = RollingBallWithFriction(
-        camera_height=0,
-        add_ears=top_camera
-    )
+def memory_maze_11x11(**kwargs):
+    return _memory_maze(11, 4, 500, **kwargs)
 
-    # Build a maze with rooms and targets.
+def memory_maze_13x13(**kwargs):
+    return _memory_maze(13, 5, 750, **kwargs)
+
+def memory_maze_15x15(**kwargs):
+    # Maze based on DMLab30-explore_goal_locations_large
+    # {
+    #     mazeHeight = 17,  # with outer walls
+    #     mazeWidth = 17,
+    #     roomCount = 9,
+    #     roomMaxSize = 3,
+    #     roomMaxSize = 3,
+    # }
+    return _memory_maze(15, 6, 1000, max_rooms=9, room_max_size=3, **kwargs)
+
+def _memory_maze(
+    maze_size,  # measured without exterior walls
+    n_targets,
+    time_limit,
+    max_rooms=6,
+    room_min_size=3,
+    room_max_size=5,
+    control_fps=4,
+    discrete_actions=True,
+    target_color_in_image=True,
+    top_camera=False,
+    good_visibility=False,
+    random_state=None,
+):
+    walker = RollingBallWithFriction(camera_height=0, add_ears=top_camera)
+
     wall_textures = labmaze_textures.WallTextures(style='style_01')
     arena = mazes.RandomMazeWithTargets(
-        x_cells=11,
-        y_cells=11,
+        x_cells=maze_size + 2,
+        y_cells=maze_size + 2,
         xy_scale=2.0,
         z_height=1.2 if not good_visibility else 0.4,
-        max_rooms=4,
-        room_min_size=4,
-        room_max_size=5,
+        max_rooms=max_rooms,
+        room_min_size=room_min_size,
+        room_max_size=room_max_size,
         spawns_per_room=1,
         targets_per_room=1,
         wall_textures=wall_textures,
@@ -42,7 +72,7 @@ def memory_maze_9x9(discrete_actions=True,
     task = MemoryMaze(
         walker=walker,
         maze_arena=arena,
-        n_targets=3,
+        n_targets=n_targets,
         target_radius=0.25 if not good_visibility else 0.5,
         enable_global_task_observables=True,
         control_timestep=1.0 / control_fps
@@ -67,14 +97,13 @@ def memory_maze_9x9(discrete_actions=True,
         task.observables['top_camera'].enabled = True
 
     env = composer.Environment(
-        time_limit=250 - 1e-3,  # subtract epsilon to make sure ep_length=time_limit*fps
+        time_limit=time_limit - 1e-3,  # subtract epsilon to make sure ep_length=time_limit*fps
         task=task,
         random_state=random_state,
         strip_singleton_obs_buffer_dim=True)
 
-    camera_key = 'walker/egocentric_camera' if not top_camera else 'top_camera'
     env = RemapObservationWrapper(env, {
-        'image': camera_key,
+        'image': 'walker/egocentric_camera' if not top_camera else 'top_camera',
         'target_color': 'target_color',
     })
 

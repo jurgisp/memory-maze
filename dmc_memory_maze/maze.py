@@ -21,8 +21,8 @@ TARGET_COLORS = [
 
 class RollingBallWithFriction(jumping_ball.RollingBallWithHead):
 
-    def __init__(self, roll_damping=5.0, steer_damping=20.0, **kwargs):
-        super().__init__(**kwargs)
+    def _build(self, roll_damping=5.0, steer_damping=20.0, **kwargs):
+        super()._build(**kwargs)
         # Increase friction to the joints, so the movement feels more like traditional
         # first-person navigation control, without much acceleration/deceleration.
         self._mjcf_root.find('joint', 'roll').damping = roll_damping
