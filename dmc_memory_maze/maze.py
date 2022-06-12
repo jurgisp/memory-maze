@@ -3,6 +3,7 @@ from dm_control import mjcf
 from dm_control.composer.observation import observable as observable_lib
 from dm_control.locomotion.props import target_sphere
 from dm_control.locomotion.tasks import random_goal_maze
+from dm_control.locomotion.walkers import jumping_ball
 from numpy.random import RandomState
 
 DEFAULT_CONTROL_TIMESTEP = 0.025
@@ -16,6 +17,16 @@ TARGET_COLORS = [
     np.array([1.00, 1.00, 0.00]),  # yellow
     np.array([0.00, 1.00, 1.00]),  # cyan
 ]
+
+
+class RollingBallWithFriction(jumping_ball.RollingBallWithHead):
+
+    def __init__(self, roll_damping=5.0, steer_damping=20.0, **kwargs):
+        super().__init__(**kwargs)
+        # Increase friction to the joints, so the movement feels more like traditional
+        # first-person navigation control, without much acceleration/deceleration.
+        self._mjcf_root.find('joint', 'roll').damping = roll_damping
+        self._mjcf_root.find('joint', 'steer').damping = steer_damping
 
 
 class MemoryMaze(random_goal_maze.NullGoalMaze):

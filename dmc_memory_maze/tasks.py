@@ -1,11 +1,8 @@
 import numpy as np
 from dm_control import composer
 from dm_control.locomotion.arenas import labmaze_textures, mazes
-from dm_control.locomotion.props import target_sphere
-from dm_control.locomotion.tasks import random_goal_maze
-from dm_control.locomotion.walkers import jumping_ball
 
-from dmc_memory_maze.maze import MemoryMaze
+from dmc_memory_maze.maze import MemoryMaze, RollingBallWithFriction
 from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
                                       RemapObservationWrapper,
                                       TargetColorAsBorderWrapper)
@@ -16,10 +13,10 @@ def memory_maze_9x9(discrete_actions=True,
                     target_color_in_image=True,
                     top_camera=False,
                     good_visibility=False,
-                    control_fps=10,
+                    control_fps=4,
                     ):
 
-    walker = jumping_ball.RollingBallWithHead(
+    walker = RollingBallWithFriction(
         camera_height=0,
         add_ears=top_camera
     )
@@ -46,7 +43,7 @@ def memory_maze_9x9(discrete_actions=True,
         walker=walker,
         maze_arena=arena,
         n_targets=3,
-        target_radius=0.3 if not good_visibility else 0.5,
+        target_radius=0.25 if not good_visibility else 0.5,
         enable_global_task_observables=True,
         control_timestep=1.0 / control_fps
     )
@@ -70,7 +67,7 @@ def memory_maze_9x9(discrete_actions=True,
         task.observables['top_camera'].enabled = True
 
     env = composer.Environment(
-        time_limit=100 - 1e-3,  # subtract epsilon to make sure ep_length=time_limit*fps
+        time_limit=250 - 1e-3,  # subtract epsilon to make sure ep_length=time_limit*fps
         task=task,
         random_state=random_state,
         strip_singleton_obs_buffer_dim=True)
@@ -85,13 +82,14 @@ def memory_maze_9x9(discrete_actions=True,
         env = TargetColorAsBorderWrapper(env)
 
     if discrete_actions:
+        c = 1.0
         env = DiscreteActionSetWrapper(env, [
             np.array([0., 0.]),  # noop
-            np.array([-1., 0.]),  # forward
-            np.array([0., -1.]),  # left
-            np.array([0., +1.]),  # right
-            np.array([-1., -1.]),  # forward + left
-            np.array([-1., +1.]),  # forward + right
+            np.array([-c, 0.]),  # forward
+            np.array([0., -c]),  # left
+            np.array([0., +c]),  # right
+            np.array([-c, -c]),  # forward + left
+            np.array([-c, +c]),  # forward + right
         ])
 
     return env

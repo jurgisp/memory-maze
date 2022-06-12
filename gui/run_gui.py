@@ -1,9 +1,8 @@
 
-import gym
-
 import argparse
 from collections import defaultdict
 
+import gym
 import numpy as np
 import pygame
 import pygame.freetype
@@ -11,7 +10,7 @@ from PIL import Image
 
 PANEL_LEFT = 250
 PANEL_RIGHT = 250
-FOCUS_HACK = True
+FOCUS_HACK = False
 
 K_NONE = 0
 

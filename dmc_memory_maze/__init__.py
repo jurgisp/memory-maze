@@ -18,8 +18,11 @@ try:
         return GymWrapper(dmenv)
 
     register(id="MemoryMaze-9x9-v0", entry_point=f(_make_gym_env, tasks.memory_maze_9x9))
-    register(id="MemoryMaze-9x9-Top-v0", entry_point=f(_make_gym_env, tasks.memory_maze_9x9, top_camera=True))
     register(id="MemoryMaze-9x9-Vis-v0", entry_point=f(_make_gym_env, tasks.memory_maze_9x9, good_visibility=True))
+    register(id="MemoryMaze-9x9-HiFps-v0", entry_point=f(_make_gym_env, tasks.memory_maze_9x9, control_fps=40))
+    register(id="MemoryMaze-9x9-HiFps-Vis-v0", entry_point=f(_make_gym_env, tasks.memory_maze_9x9, good_visibility=True, control_fps=40))
+    # register(id="MemoryMaze-9x9-Top-v0", entry_point=f(_make_gym_env, tasks.memory_maze_9x9, top_camera=True))
+    # register(id="MemoryMaze-9x9-HiFps-Top-v0", entry_point=f(_make_gym_env, tasks.memory_maze_9x9, top_camera=True, control_fps=40))
 
 
 except ImportError:
