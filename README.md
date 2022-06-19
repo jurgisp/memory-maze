@@ -8,7 +8,9 @@ Memory Maze is a task designed to test the memory abilities of RL agents.
 
 The task is based on a game known as Scavenger Hunt (or Treasure Hunt). The agent starts in a randomly generated maze, which contains a number of landmarks of different colors. Agent is prompted to find the target landmark of a specific color, indicated by the border color in the observation image. Once the agent successfully finds and touches the correct landmark, it gets a +1 reward and the next random landmark is chosen as a target. If the agent touches the landmark of the wrong color, there is no effect. Throughout the episode the maze layout and the locations of the landmarks do not change. The episode continues for a fixed amount of time, and so the total episode reward is equal to the number of targets the agent can find in the given time. 
 
-[TODO: gif]
+<p align="center">
+    <img width="20%" src="https://user-images.githubusercontent.com/3135115/174484824-cf83ddf3-4a44-4384-abc2-430e26881e09.gif">
+</p>
 
 Memory Maze tests the memory of the agent in a clean and direct way, because an agent with perfect memory will only have to explore the maze once (which is possible in a time much shorter than the length of episode) and then just follow the shortest path to the target, whereas an agent with no memory will have to randomly wonder through the maze to find each target.
 
