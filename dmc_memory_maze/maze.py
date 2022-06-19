@@ -94,6 +94,8 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
 
         self._walker.observables.egocentric_camera.height = camera_resolution
         self._walker.observables.egocentric_camera.width = camera_resolution
+        self._maze_arena.observables.top_camera.height = camera_resolution
+        self._maze_arena.observables.top_camera.width = camera_resolution
 
     @property
     def task_observables(self):
