@@ -1,2 +1,5 @@
+gym
 pygame
 pillow
+imageio
+imageio-ffmpeg

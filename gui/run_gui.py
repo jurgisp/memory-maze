@@ -8,11 +8,14 @@ import pygame
 import pygame.freetype
 from PIL import Image
 
+from recording import SaveNpzWrapper
+
 PANEL_LEFT = 250
 PANEL_RIGHT = 250
 FOCUS_HACK = False
-
-K_NONE = 0
+RECORD_DIR = './log'
+START_PAUSED = True
+K_NONE = tuple()
 
 
 def get_keymap(env):
@@ -34,15 +37,21 @@ def main():
     parser.add_argument('--random', type=float, default=0.0)
     parser.add_argument('--noreset', action='store_true')
     parser.add_argument('--full_screen', action='store_true')
-    parser.add_argument('--record', type=str, default=None)
+    parser.add_argument('--record', action='store_true')
+    parser.add_argument('--record_mp4', action='store_true')
+    parser.add_argument('--record_gif', action='store_true')
     args = parser.parse_args()
     render_size = args.size
     window_size = (render_size[0] + PANEL_LEFT + PANEL_RIGHT, render_size[1])
 
     print(f'Creating environment: {args.env}')
     env = gym.make(args.env, disable_env_checker=True)
-    # if args.record:
-    #     env = Recorder(env, args.record)  # TODO
+    if args.record:
+        env = SaveNpzWrapper(
+            env,
+            RECORD_DIR,
+            video_format='mp4' if args.record_mp4 else 'gif' if args.record_gif else None,
+            video_fps=args.fps * 2)
 
     keymap = get_keymap(env)
 
@@ -57,12 +66,12 @@ def main():
     if FOCUS_HACK and not args.full_screen:
         # Hack: for some reason app window doesn't get focus when launching, so
         # we launch it as full screen and then exit full screen.
-        pygame.display.toggle_fullscreen()  
+        pygame.display.toggle_fullscreen()
     clock = pygame.time.Clock()
     font = pygame.freetype.SysFont('Mono', 16)
     fontsmall = pygame.freetype.SysFont('Mono', 12)
     running = True
-    paused = False
+    paused = START_PAUSED
     speedup = False
 
     while running:
@@ -114,8 +123,8 @@ def main():
                 keys_down[event.key] = True
         keys_hold = pygame.key.get_pressed()
 
-        # Action keys        
-        action = keymap[tuple()]  # noop, if no keys pressed
+        # Action keys
+        action = keymap[K_NONE]  # noop, if no keys pressed
         for keys, act in keymap.items():
             if all(keys_hold[key] or keys_down[key] for key in keys):
                 # The last keymap entry which has all keys pressed wins
@@ -128,6 +137,9 @@ def main():
             running = False
         if keys_down[pygame.K_SPACE]:  # Pause
             paused = not paused
+        else:
+            if action != keymap[K_NONE]:
+                paused = False  # unpause on action press
         if keys_down[pygame.K_BACKSPACE]:  # Force reset
             force_reset = True
         if keys_hold[pygame.K_TAB]:
@@ -142,7 +154,7 @@ def main():
             if np.random.random() < args.random:
                 action = env.action_space.sample()
 
-        obs, reward, done, info = env.step(action)
+        obs, reward, done, info = env.step(action)  # type: ignore
         steps += 1
         return_ += reward
 
@@ -151,11 +163,14 @@ def main():
         if reward:
             print(f'reward: {reward}')
         if done or force_reset:
-            print(f'Episode done - length: {steps}  return: {return_}  info: {info}')
+            print(f'Episode done - length: {steps}  return: {return_}')
             obs = env.reset()
             steps = 0
             return_ = 0
             episode += 1
+            if done and args.record:
+                # If recording, require relaunch for next episode
+                running = False
 
     pygame.quit()
 
