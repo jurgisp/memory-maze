@@ -59,6 +59,7 @@ class ObservationWrapper(Wrapper):
 
 
 class RemapObservationWrapper(ObservationWrapper):
+    """Select a subset of dictionary observation keys and rename them."""
 
     def __init__(self, env: dm_env.Environment, mapping: Dict[str, str]):
         super().__init__(env)
@@ -74,7 +75,25 @@ class RemapObservationWrapper(ObservationWrapper):
         return {key: obs[key_orig] for key, key_orig in self.mapping.items()}
 
 
+class ImageOnlyObservationWrapper(ObservationWrapper):
+    """Select one of the dictionary observation keys as observation."""
+
+    def __init__(self, env: dm_env.Environment, key: str = 'image'):
+        super().__init__(env)
+        self.key = key
+
+    def observation_spec(self):
+        spec = self.env.observation_spec()
+        assert isinstance(spec, dict)
+        return spec[self.key]
+
+    def observation(self, obs):
+        assert isinstance(obs, dict)
+        return obs[self.key]
+
+
 class DiscreteActionSetWrapper(Wrapper):
+    """Change action space from continuous to discrete with given set of action vectors."""
 
     def __init__(self, env: dm_env.Environment, action_set: List[np.ndarray]):
         super().__init__(env)
@@ -88,6 +107,7 @@ class DiscreteActionSetWrapper(Wrapper):
 
 
 class TargetColorAsBorderWrapper(ObservationWrapper):
+    """MemoryMaze-specific wrapper, which draws target_color as border on the image."""
 
     def observation_spec(self):
         spec = self.env.observation_spec()

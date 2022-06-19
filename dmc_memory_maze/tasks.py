@@ -5,6 +5,7 @@ from dm_control.locomotion.arenas import labmaze_textures
 from dmc_memory_maze.maze import (FixedWallTexture, MazeWithTargetsArena,
                                   MemoryMazeTask, RollingBallWithFriction)
 from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
+                                      ImageOnlyObservationWrapper,
                                       RemapObservationWrapper,
                                       TargetColorAsBorderWrapper)
 
@@ -54,6 +55,7 @@ def _memory_maze(
     control_freq=DEFAULT_CONTROL_FREQ,
     discrete_actions=True,
     target_color_in_image=True,
+    image_only_obs=False,
     top_camera=False,
     good_visibility=False,
     camera_resolution=64,
@@ -103,6 +105,9 @@ def _memory_maze(
 
     if target_color_in_image:
         env = TargetColorAsBorderWrapper(env)
+    if image_only_obs:
+        assert target_color_in_image, 'Image-only observation only makes sense with target_color_in_image'
+        env = ImageOnlyObservationWrapper(env)
 
     if discrete_actions:
         env = DiscreteActionSetWrapper(env, [

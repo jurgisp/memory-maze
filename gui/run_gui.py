@@ -72,8 +72,12 @@ def main():
         screen.fill((64, 64, 64))
 
         # Render image observation
-        assert isinstance(obs, dict), 'Expecting dictionary observation with obs["image"]'
-        image = obs['image']  # type: ignore
+        if isinstance(obs, dict):
+            assert 'image' in obs, 'Expecting dictionary observation with obs["image"]'
+            image = obs['image']  # type: ignore
+        else:
+            assert isinstance(obs, np.ndarray) and len(obs.shape) == 3, 'Expecting image observation'
+            image = obs
         image = Image.fromarray(image)
         image = image.resize(render_size, resample=0)
         image = np.array(image)
