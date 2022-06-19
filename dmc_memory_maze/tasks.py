@@ -81,6 +81,7 @@ def _memory_maze(
         maze_arena=arena,
         n_targets=n_targets,
         target_radius=0.5 if good_visibility or top_camera else 0.25,
+        target_height_above_ground=0.5 if good_visibility else 0.0,
         enable_global_task_observables=True,
         control_timestep=1.0 / control_freq,
         camera_resolution=camera_resolution,
