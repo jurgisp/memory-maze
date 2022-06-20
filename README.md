@@ -9,7 +9,7 @@ Memory Maze is a task designed to test the memory abilities of RL agents.
 The task is based on a game known as Scavenger Hunt (or Treasure Hunt). The agent starts in a randomly generated maze, which contains a number of landmarks of different colors. Agent is prompted to find the target landmark of a specific color, indicated by the border color in the observation image. Once the agent successfully finds and touches the correct landmark, it gets a +1 reward and the next random landmark is chosen as a target. If the agent touches the landmark of the wrong color, there is no effect. Throughout the episode the maze layout and the locations of the landmarks do not change. The episode continues for a fixed amount of time, and so the total episode reward is equal to the number of targets the agent can find in the given time. 
 
 <p align="center">
-    <img width="20%" src="https://user-images.githubusercontent.com/3135115/174484824-cf83ddf3-4a44-4384-abc2-430e26881e09.gif">
+    <img width="128" src="https://user-images.githubusercontent.com/3135115/174484824-cf83ddf3-4a44-4384-abc2-430e26881e09.gif">
 </p>
 
 Memory Maze tests the memory of the agent in a clean and direct way, because an agent with perfect memory will only have to explore the maze once (which is possible in a time much shorter than the length of episode) and then just follow the shortest path to the target, whereas an agent with no memory will have to randomly wonder through the maze to find each target.
@@ -18,7 +18,18 @@ There are 4 size variations of the maze. The largest maze 15x15 is designed to b
 
 [TODO: table]
 
-[TODO: top-down images]
+
+<p align="center">
+    <img width="20%" alt="map-9x9" src="https://user-images.githubusercontent.com/3135115/174536586-5cc20b4b-89d1-4543-9cee-56446f21d687.png">
+    &nbsp;
+    <img width="20%" alt="map-11x11" src="https://user-images.githubusercontent.com/3135115/174536502-0632cd47-53fc-42b9-bdca-414fbf2073d5.png">
+    &nbsp;
+    <img width="20%" alt="map-13x13" src="https://user-images.githubusercontent.com/3135115/174536332-ba83858b-bf61-4ffa-bb9f-2b0faaa081a5.png">
+    &nbsp;
+    <img width="20%" alt="map-15x15" src="https://user-images.githubusercontent.com/3135115/174536152-00d4c86e-9099-4541-8e78-20745c3912f4.png">
+    <br/>
+    Examples of generated mazes for 4 different sizes.
+</p>
 
 ## Installation
 
@@ -42,7 +53,7 @@ env = gym.make('dmc_memory_maze:MemoryMaze-15x15-v0')
 ```
 
 This default environment has dictionary observation space (TODO: map, targets)
-```
+```python
 >>> env.observation_space
 Dict(image: Box(0, 255, (64, 64, 3), uint8))
 ```
