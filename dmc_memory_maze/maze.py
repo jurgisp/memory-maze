@@ -66,8 +66,8 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
             target = target_sphere.TargetSphere(
                 radius=target_radius,
                 height_above_ground=target_radius + target_height_above_ground,
-                rgb1=tuple(color * 0.7),
-                rgb2=tuple(color * 0.4),
+                rgb1=tuple(color * 1.0),
+                rgb2=tuple(color * 0.5),
             )
             self._targets.append(target)
             self._maze_arena.attach(target)

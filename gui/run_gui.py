@@ -14,7 +14,7 @@ PANEL_LEFT = 250
 PANEL_RIGHT = 250
 FOCUS_HACK = False
 RECORD_DIR = './log'
-START_PAUSED = True
+START_PAUSED = False
 K_NONE = tuple()
 
 
