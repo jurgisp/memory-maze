@@ -61,13 +61,13 @@ def _memory_maze(
     camera_resolution=64,
     random_state=None,
 ):
-    walker = RollingBallWithFriction(camera_height=0, add_ears=top_camera)
+    walker = RollingBallWithFriction(camera_height=0.3, add_ears=top_camera)
 
     arena = MazeWithTargetsArena(
         x_cells=maze_size + 2,  # inner size => outer size
         y_cells=maze_size + 2,
         xy_scale=2.0,
-        z_height=1.2 if not good_visibility else 0.4,
+        z_height=1.5 if not good_visibility else 0.4,
         max_rooms=max_rooms,
         room_min_size=room_min_size,
         room_max_size=room_max_size,
@@ -82,7 +82,7 @@ def _memory_maze(
         walker=walker,
         maze_arena=arena,
         n_targets=n_targets,
-        target_radius=0.5 if good_visibility or top_camera else 0.25,
+        target_radius=0.5 if good_visibility or top_camera else 0.35,
         target_height_above_ground=0.5 if good_visibility else 0.0,
         enable_global_task_observables=True,
         control_timestep=1.0 / control_freq,
