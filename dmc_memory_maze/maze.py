@@ -196,7 +196,7 @@ class MazeWithTargetsArena(mazes.MazeWithTargets):
                name='random_maze'):
         random_seed = np.random.randint(2147483648)
         super()._build(
-            maze=labmaze.RandomMaze(
+            maze=TextMaze(
                 height=y_cells,
                 width=x_cells,
                 max_rooms=max_rooms,
@@ -266,3 +266,64 @@ class MazeWithTargetsArena(mazes.MazeWithTargets):
                 self._mjcf_root.worldbody.add(
                     'geom', name=tile_name, type='plane', material=material,
                     pos=tile_pos, size=tile_size, contype=0, conaffinity=0)
+
+
+class TextMaze(labmaze.RandomMaze):
+    """Augments standard generated labmaze with some walls marked with different chars."""
+
+    def regenerate(self):
+        super().regenerate()
+        self._decorate_random_corridors()
+
+    def _decorate_random_corridors(self):
+        size = self.entity_layer.shape[0]
+        # 9x9  : size=11 -> decors=0
+        # 15x15: size=17 -> decors=3
+        decors = (size - 11) // 2  
+        for _ in range(decors):
+            if not self._decorate_random_corridor('x'):
+                break
+            if not self._decorate_random_corridor('y'):
+                break
+            if not self._decorate_random_corridor('z'):
+                break
+
+    def _decorate_random_corridor(self, wallchar, max_iter=1000):
+        m = self.entity_layer
+        n = m.shape[0]
+
+        for _ in range(max_iter):
+            i = np.random.randint(1, n - 1)
+            j = np.random.randint(1, n - 1)
+
+            is_corridor_hor = (
+                m[i, j] == ' ' and
+                m[i + 1, j] == '*' and
+                m[i - 1, j] == '*' and
+                m[i + 1, j - 1] == '*' and  # This detects a "long corridor"
+                m[i - 1, j - 1] == '*' and
+                m[i + 1, j + 1] == '*' and
+                m[i - 1, j + 1] == '*'
+            )
+            is_corridor_vert = (
+                m[i, j] == ' ' and
+                m[i, j - 1] == '*' and
+                m[i, j + 1] == '*' and
+                m[i - 1, j - 1] == '*' and
+                m[i - 1, j + 1] == '*' and
+                m[i + 1, j - 1] == '*' and
+                m[i + 1, j + 1] == '*'
+            )
+
+            if is_corridor_hor:
+                m[i + 1, j] = wallchar
+                m[i - 1, j] = wallchar
+                return True
+
+            if is_corridor_vert:
+                m[i, j - 1] = wallchar
+                m[i, j + 1] = wallchar
+                return True
+
+        # Suitable location not found
+        return False

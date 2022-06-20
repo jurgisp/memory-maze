@@ -74,7 +74,12 @@ def _memory_maze(
         spawns_per_room=1,
         targets_per_room=1,
         floor_textures=labmaze_textures.FloorTextures('style_04'),
-        wall_textures=FixedWallTexture('style_05', 'yellow'),
+        wall_textures={
+            '*': FixedWallTexture('style_05', 'yellow'),  # default wall
+            'x': FixedWallTexture('style_01', 'red_bright'),  # decorations #1
+            'y': FixedWallTexture('style_01', 'green'),  # decorations #2
+            'z': FixedWallTexture('style_01', 'blue'),  # decorations #3
+        },
         skybox_texture=None,
     )
 
