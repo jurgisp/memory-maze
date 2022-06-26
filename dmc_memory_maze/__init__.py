@@ -29,7 +29,10 @@ try:
         register(id=f'MemoryMaze-{key}-Vis-v0', entry_point=f(_make_gym_env, dm_task, good_visibility=True))  # Easily visible targets
         register(id=f'MemoryMaze-{key}-HD-v0', entry_point=f(_make_gym_env, dm_task, camera_resolution=256))  # High-res camera
         register(id=f'MemoryMaze-{key}-Top-v0', entry_point=f(_make_gym_env, dm_task, camera_resolution=256, top_camera=True))  # Top-down camera
-        register(id=f'MemoryMaze-{key}-Img-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True))  # Image-only observation
+        
+        # Image-only observation
+        register(id=f'MemoryMaze-{key}-Img-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True))
+        register(id=f'MemoryMaze-{key}-Img-Vis-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, good_visibility=True))  # Easily visible targets
         
         # High control frequency
         register(id=f'MemoryMaze-{key}-HiFreq-v0', entry_point=f(_make_gym_env, dm_task, control_freq=40))
