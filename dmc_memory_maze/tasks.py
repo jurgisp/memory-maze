@@ -72,7 +72,7 @@ def _memory_maze(
         room_max_size=room_max_size,
         spawns_per_room=1,
         targets_per_room=1,
-        floor_textures=FixedFloorTexture('style_01', 'blue_bright'),
+        floor_textures=FixedFloorTexture('style_01', ['blue', 'blue_bright']),
         wall_textures=dict({
             '*': FixedWallTexture('style_01', 'yellow'),  # default wall
         }, **{str(i): labmaze_textures.WallTextures('style_01') for i in range(10)}  # variations

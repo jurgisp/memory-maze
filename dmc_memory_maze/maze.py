@@ -177,16 +177,19 @@ class FixedWallTexture(labmaze_textures.WallTextures):
 class FixedFloorTexture(labmaze_textures.FloorTextures):
     """Selects a single texture instead of a collection to sample from."""
 
-    def _build(self, style, texture_name):
+    def _build(self, style, texture_names):
         labmaze_textures = labmaze_assets.get_floor_texture_paths(style)
         self._mjcf_root = mjcf.RootElement(model='labmaze_' + style)
         self._textures = []
-        if texture_name not in labmaze_textures:
-            raise ValueError(f'`texture_name` should be one of {labmaze_textures.keys()}: got {texture_name}')
-        texture_path = labmaze_textures[texture_name]
-        self._textures.append(self._mjcf_root.asset.add(  # type: ignore
-            'texture', type='2d', name=texture_name,
-            file=texture_path.format(texture_name)))
+        if isinstance(texture_names, str):
+            texture_names = [texture_names]
+        for texture_name in texture_names:
+            if texture_name not in labmaze_textures:
+                raise ValueError(f'`texture_name` should be one of {labmaze_textures.keys()}: got {texture_name}')
+            texture_path = labmaze_textures[texture_name]
+            self._textures.append(self._mjcf_root.asset.add(  # type: ignore
+                'texture', type='2d', name=texture_name,
+                file=texture_path.format(texture_name)))
 
 
 class MazeWithTargetsArena(mazes.MazeWithTargets):
