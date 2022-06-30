@@ -2,7 +2,7 @@ import numpy as np
 from dm_control import composer
 from dm_control.locomotion.arenas import labmaze_textures
 
-from dmc_memory_maze.maze import (FixedWallTexture, MazeWithTargetsArena,
+from dmc_memory_maze.maze import (FixedFloorTexture, FixedWallTexture, MazeWithTargetsArena,
                                   MemoryMazeTask, RollingBallWithFriction)
 from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
                                       ImageOnlyObservationWrapper,
@@ -62,7 +62,6 @@ def _memory_maze(
     random_state=None,
 ):
     walker = RollingBallWithFriction(camera_height=0.3, add_ears=top_camera)
-
     arena = MazeWithTargetsArena(
         x_cells=maze_size + 2,  # inner size => outer size
         y_cells=maze_size + 2,
@@ -73,7 +72,7 @@ def _memory_maze(
         room_max_size=room_max_size,
         spawns_per_room=1,
         targets_per_room=1,
-        floor_textures=labmaze_textures.FloorTextures('style_04'),
+        floor_textures=FixedFloorTexture('style_01', 'blue_bright'),
         wall_textures={
             '*': FixedWallTexture('style_05', 'yellow'),  # default wall
             'x': FixedWallTexture('style_01', 'red_bright'),  # decorations #1

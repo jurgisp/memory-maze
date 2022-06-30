@@ -174,6 +174,21 @@ class FixedWallTexture(labmaze_textures.WallTextures):
             file=texture_path.format(texture_name)))
 
 
+class FixedFloorTexture(labmaze_textures.FloorTextures):
+    """Selects a single texture instead of a collection to sample from."""
+
+    def _build(self, style, texture_name):
+        labmaze_textures = labmaze_assets.get_floor_texture_paths(style)
+        self._mjcf_root = mjcf.RootElement(model='labmaze_' + style)
+        self._textures = []
+        if texture_name not in labmaze_textures:
+            raise ValueError(f'`texture_name` should be one of {labmaze_textures.keys()}: got {texture_name}')
+        texture_path = labmaze_textures[texture_name]
+        self._textures.append(self._mjcf_root.asset.add(  # type: ignore
+            'texture', type='2d', name=texture_name,
+            file=texture_path.format(texture_name)))
+
+
 class MazeWithTargetsArena(mazes.MazeWithTargets):
     """Fork of mazes.RandomMazeWithTargets."""
 
@@ -222,9 +237,11 @@ class MazeWithTargetsArena(mazes.MazeWithTargets):
         """
         _DEFAULT_FLOOR_CHAR = '.'
 
-        assert len(self._floor_textures) > 1
         main_floor_texture = self._floor_textures[0]
-        room_floor_textures = self._floor_textures[1:]
+        if len(self._floor_textures) > 1:
+            room_floor_textures = self._floor_textures[1:]
+        else:
+            room_floor_textures = [main_floor_texture]
 
         for i_var, variation in enumerate(_DEFAULT_FLOOR_CHAR + string.ascii_uppercase):
             if variation not in self._maze.variations_layer:
