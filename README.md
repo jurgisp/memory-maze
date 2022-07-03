@@ -1,6 +1,6 @@
 # dmc-memory-maze
 
-Memory Maze environment for RL based on [dm_control / MuJoCo](https://github.com/deepmind/dm_control).
+Memory Maze environment for RL based on [dm_control](https://github.com/deepmind/dm_control).
 
 ## Task
 
@@ -16,8 +16,14 @@ Memory Maze tests the memory of the agent in a clean and direct way, because an 
 
 There are 4 size variations of the maze. The largest maze 15x15 is designed to be challenging but solvable for humans (see benchmark results below), but out of reach for the state-of-the-art RL methods. The smaller sizes are provided as stepping stones, with 9x9 solvable with current RL methods.
 
-[TODO: table]
+| Size      | Landmarks | Episode steps | env_id                |
+|-----------|-----------|---------------|-----------------------|
+| **9x9**   | 3         | 1000          | `MemoryMaze-9x9-v0`   |
+| **11x11** | 4         | 2000          | `MemoryMaze-11x11-v0` |
+| **13x13** | 5         | 3000          | `MemoryMaze-13x13-v0` |
+| **15x15** | 6         | 4000          | `MemoryMaze-15x15-v0` |
 
+Note that the mazes are generated with [labmaze](https://github.com/deepmind/labmaze), the same algorithm as used by [DmLab-30](https://github.com/deepmind/lab/tree/master/game_scripts/levels/contributed/dmlab30). In particular, 9x9 corresponds to the [small](https://github.com/deepmind/lab/tree/master/game_scripts/levels/contributed/dmlab30#goal-locations-small) variant and 15x15 corresponds to the [large](https://github.com/deepmind/lab/tree/master/game_scripts/levels/contributed/dmlab30#goal-locations-large) variant.
 
 <p align="center">
     <img width="20%" alt="map-9x9" src="https://user-images.githubusercontent.com/3135115/177040204-fbf3b558-d063-49d3-9973-ae113137782f.png">
