@@ -1,3 +1,4 @@
+import functools
 import string
 
 import labmaze
@@ -75,16 +76,18 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
         self._rewarded_this_step = False
         self._targets_obtained = 0
 
-        # if enable_global_task_observables:  # TODO: probe vectors
-        #     xpos_origin_callable = lambda phys: phys.bind(walker.root_body).xpos
+        if enable_global_task_observables:
+            # Add egocentric vectors to targets
+            xpos_origin_callable = lambda phys: phys.bind(walker.root_body).xpos
 
-        #     def _target_pos(physics, target=target):
-        #         return physics.bind(target.geom).xpos
+            def _target_pos(physics, target):
+                return physics.bind(target.geom).xpos
 
-        #     walker.observables.add_egocentric_vector(
-        #         'target_0',
-        #         observable_lib.Generic(_target_pos),
-        #         origin_callable=xpos_origin_callable)
+            for i in range(n_targets):
+                walker.observables.add_egocentric_vector(
+                    f'target_{i}',
+                    observable_lib.Generic(functools.partial(_target_pos, target=self._targets[i])),
+                    origin_callable=xpos_origin_callable)
 
         self._task_observables = super().task_observables
         target_color_obs = observable_lib.Generic(

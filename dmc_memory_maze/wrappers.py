@@ -4,7 +4,7 @@ from typing import Any, Dict, List
 
 import dm_env
 import numpy as np
-from dm_env.specs import DiscreteArray
+from dm_env import specs
 
 
 class Wrapper(dm_env.Environment):
@@ -75,6 +75,36 @@ class RemapObservationWrapper(ObservationWrapper):
         return {key: obs[key_orig] for key, key_orig in self.mapping.items()}
 
 
+class TargetPosWrapper(ObservationWrapper):
+    """Collects and postporcesses walker/target_{i} vectors into targets_pos (n_targets,2) tensor."""
+
+    def __init__(self, env: dm_env.Environment, key='targets_pos', xy_scale=2.0):
+        super().__init__(env)
+        self.key = key
+        self.xy_scale = xy_scale
+        spec = self.env.observation_spec()
+        assert isinstance(spec, dict) and 'walker/target_0' in spec
+        i = 0
+        while f'walker/target_{i}' in spec:
+            i += 1
+        self.n_targets = i
+
+    def observation_spec(self):
+        spec = self.env.observation_spec()
+        assert isinstance(spec, dict)
+        spec[self.key] = specs.Array((self.n_targets, 2), float, self.key)
+        return spec
+
+    def observation(self, obs):
+        assert isinstance(obs, dict)
+        x = np.zeros((self.n_targets, 2))
+        for i in range(self.n_targets):
+            x_raw = obs[f'walker/target_{i}']
+            x[i] = x_raw[:2] / self.xy_scale
+        obs[self.key] = x
+        return obs
+
+
 class ImageOnlyObservationWrapper(ObservationWrapper):
     """Select one of the dictionary observation keys as observation."""
 
@@ -100,7 +130,7 @@ class DiscreteActionSetWrapper(Wrapper):
         self.action_set = action_set
 
     def action_spec(self):
-        return DiscreteArray(len(self.action_set))
+        return specs.DiscreteArray(len(self.action_set))
 
     def step(self, action) -> dm_env.TimeStep:
         return self.env.step(self.action_set[action])
