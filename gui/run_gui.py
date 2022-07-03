@@ -14,7 +14,6 @@ PANEL_LEFT = 250
 PANEL_RIGHT = 250
 FOCUS_HACK = False
 RECORD_DIR = './log'
-START_PAUSED = False
 K_NONE = tuple()
 
 
@@ -36,7 +35,8 @@ def main():
     parser.add_argument('--fps', type=int, default=10)
     parser.add_argument('--random', type=float, default=0.0)
     parser.add_argument('--noreset', action='store_true')
-    parser.add_argument('--full_screen', action='store_true')
+    parser.add_argument('--fullscreen', action='store_true')
+    parser.add_argument('--nonoop', action='store_true', help='Pause instead of noop')
     parser.add_argument('--record', action='store_true')
     parser.add_argument('--record_mp4', action='store_true')
     parser.add_argument('--record_gif', action='store_true')
@@ -56,22 +56,23 @@ def main():
     keymap = get_keymap(env)
 
     steps = 0
-    return_ = 0
+    return_ = 0.0
     episode = 0
     obs = env.reset()
 
     pygame.init()
-    start_fullscreen = args.full_screen or FOCUS_HACK
+    start_fullscreen = args.fullscreen or FOCUS_HACK
     screen = pygame.display.set_mode(window_size, pygame.FULLSCREEN if start_fullscreen else 0)
-    if FOCUS_HACK and not args.full_screen:
+    if FOCUS_HACK and not args.fullscreen:
         # Hack: for some reason app window doesn't get focus when launching, so
         # we launch it as full screen and then exit full screen.
         pygame.display.toggle_fullscreen()
     clock = pygame.time.Clock()
     font = pygame.freetype.SysFont('Mono', 16)
     fontsmall = pygame.freetype.SysFont('Mono', 12)
+    
     running = True
-    paused = START_PAUSED
+    paused = False
     speedup = False
 
     while running:
@@ -101,13 +102,13 @@ def main():
             screen.blit(text_surface, (16, y))
             y += font.size + 2  # type: ignore
 
-        # # Render keymap help
-        # lines = keymap_to_text(keymap, actions)
-        # y = 5
-        # for line in lines:
-        #     text_surface, rect = fontsmall.render(line, (255, 255, 255))
-        #     screen.blit(text_surface, (render_size[0] + 230 + 16, y))
-        #     y += fontsmall.size + 2
+        # Render keymap help
+        lines = keymap_to_text(keymap)
+        y = 5
+        for line in lines:
+            text_surface, rect = fontsmall.render(line, (255, 255, 255))
+            screen.blit(text_surface, (render_size[0] + PANEL_LEFT + 16, y))
+            y += fontsmall.size + 2  # type: ignore
 
         pygame.display.flip()
         clock.tick(args.fps if not speedup else 0)
@@ -147,6 +148,8 @@ def main():
 
         if paused:
             continue
+        if action == keymap[K_NONE] and args.nonoop and not force_reset:
+            continue
 
         # Environment step
 
@@ -166,7 +169,7 @@ def main():
             print(f'Episode done - length: {steps}  return: {return_}')
             obs = env.reset()
             steps = 0
-            return_ = 0
+            return_ = 0.0
             episode += 1
             if done and args.record:
                 # If recording, require relaunch for next episode
@@ -184,35 +187,25 @@ def obs_to_text(obs, env, steps, return_):
     lines = [f'{k:<15} {v:>5}' for k, v in kvs]
     return lines
 
-# def keymap_to_text(keymap, all_actions, verbose=False):
-#     lookup = defaultdict(list)
-#     for key, action in keymap.items():
-#         if key != K_NONE:
-#             if action in all_actions:
-#                 lookup[action].append(pygame.key.name(key))
-#             elif verbose:
-#                 print(f'WARN: keymap to unknown action: {action}')
+def keymap_to_text(keymap, verbose=False):
+    kvs = []
+    kvs.append(('## Commands ##', ''))
+    kvs.append(('', ''))
 
-#     kvs = []
-#     kvs.append(('## Commands ##', ''))
-#     kvs.append(('', ''))
+    # mapped actions
+    kvs.append(('forward', 'up arrow'))
+    kvs.append(('left', 'left arrow'))
+    kvs.append(('right', 'right arrow'))
 
-#     # mapped actions
-#     for action in lookup.keys():
-#         kvs.append((action, ', '.join(lookup[action])))
+    # special actions
+    kvs.append(('', ''))
+    kvs.append(('reset', 'backspace'))
+    kvs.append(('pause', 'space'))
+    kvs.append(('speed up', 'tab'))
+    kvs.append(('quit', 'esc'))
 
-#     # unmapped actions
-#     for action in all_actions:
-#         if action not in lookup and action != 'noop':
-#             kvs.append((action, '-'))
-
-#     # special actions
-#     kvs.append(('quit', 'esc'))
-#     kvs.append(('pause', 'p'))
-#     kvs.append(('speed up', 'tab'))
-
-#     lines = [f'{k:<27} {v}' for k, v in kvs]
-#     return lines
+    lines = [f'{k:<15} {v}' for k, v in kvs]
+    return lines
 
 
 if __name__ == '__main__':

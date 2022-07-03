@@ -121,7 +121,7 @@ class TargetColorAsBorderWrapper(ObservationWrapper):
         assert 'target_color' in obs and 'image' in obs
         target_color = obs.pop('target_color')
         img = obs['image']
-        B = 2
+        B = int(2 * np.sqrt(img.shape[0] // 64))
         img[:, :B] = target_color * 255 * 0.7
         img[:, -B:] = target_color * 255 * 0.7
         img[:B, :] = target_color * 255 * 0.7
