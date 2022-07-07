@@ -16,6 +16,7 @@ from dmc_memory_maze.wrappers import (AbsolutePositionWrapper,
 # Native control would be 40Hz, so this corresponds roughly to action_repeat=10.
 DEFAULT_CONTROL_FREQ = 4
 
+
 def memory_maze_9x9(**kwargs):
     """
     Maze based on DMLab30-explore_goal_locations_small
@@ -29,11 +30,14 @@ def memory_maze_9x9(**kwargs):
     """
     return _memory_maze(9, 3, 250, **kwargs)
 
+
 def memory_maze_11x11(**kwargs):
     return _memory_maze(11, 4, 500, **kwargs)
 
+
 def memory_maze_13x13(**kwargs):
     return _memory_maze(13, 5, 750, **kwargs)
+
 
 def memory_maze_15x15(**kwargs):
     """
@@ -48,6 +52,7 @@ def memory_maze_15x15(**kwargs):
     """
     return _memory_maze(15, 6, 1000, max_rooms=9, room_max_size=3, **kwargs)
 
+
 def _memory_maze(
     maze_size,  # measured without exterior walls
     n_targets,
@@ -58,12 +63,13 @@ def _memory_maze(
     control_freq=DEFAULT_CONTROL_FREQ,
     discrete_actions=True,
     target_color_in_image=True,
-    image_only_obs=False,
+    global_observables=False,
     top_camera=False,
     good_visibility=False,
     camera_resolution=64,
     random_state=None,
 ):
+    image_only_obs = target_color_in_image and not global_observables
     walker = RollingBallWithFriction(camera_height=0.3, add_ears=top_camera)
     arena = MazeWithTargetsArena(
         x_cells=maze_size + 2,  # inner size => outer size
@@ -89,7 +95,7 @@ def _memory_maze(
         n_targets=n_targets,
         target_radius=0.6,
         target_height_above_ground=0.5 if good_visibility else -0.6,
-        enable_global_task_observables=True,
+        enable_global_task_observables=True,  # Always add to underlying env, but not always expose in RemapObservationWrapper
         control_timestep=1.0 / control_freq,
         camera_resolution=camera_resolution,
     )
@@ -103,16 +109,20 @@ def _memory_maze(
         random_state=random_state,
         strip_singleton_obs_buffer_dim=True)
 
-    env = TargetsVectorWrapper(env)
-    env = AbsolutePositionWrapper(env)
-
-    env = RemapObservationWrapper(env, {
+    obs_mapping = {
         'image': 'walker/egocentric_camera' if not top_camera else 'top_camera',
         'target_color': 'target_color',
-        'targets_vector': 'targets_vector',
-        'absolute_position': 'absolute_position',
-        'absolute_orientation': 'absolute_orientation',
-    })
+    }
+    if global_observables:
+        env = TargetsVectorWrapper(env)
+        env = AbsolutePositionWrapper(env)
+        obs_mapping = dict(obs_mapping, **{
+            'targets_vector': 'targets_vector',
+            'absolute_position': 'absolute_position',
+            'absolute_orientation': 'absolute_orientation',
+        })
+
+    env = RemapObservationWrapper(env, obs_mapping)
 
     if target_color_in_image:
         env = TargetColorAsBorderWrapper(env)
