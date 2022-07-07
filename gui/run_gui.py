@@ -6,6 +6,7 @@ import gym
 import numpy as np
 import pygame
 import pygame.freetype
+from gym import spaces
 from PIL import Image
 
 from recording import SaveNpzWrapper
@@ -46,6 +47,15 @@ def main():
 
     print(f'Creating environment: {args.env}')
     env = gym.make(args.env, disable_env_checker=True)
+
+    if isinstance(env.observation_space, spaces.Dict):
+        print('Observation space:')
+        for k, v in env.observation_space.spaces.items():  # type: ignore
+            print(f'{k:>25}: {v}')
+    else:
+        print(f'Observation space:  {env.observation_space}')
+    print(f'Action space:  {env.action_space}')
+
     if args.record:
         env = SaveNpzWrapper(
             env,
@@ -158,6 +168,7 @@ def main():
                 action = env.action_space.sample()
 
         obs, reward, done, info = env.step(action)  # type: ignore
+        # print({k: v for k, v in obs.items() if k != 'image'})
         steps += 1
         return_ += reward
 

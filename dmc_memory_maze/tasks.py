@@ -5,11 +5,12 @@ from dm_control.locomotion.arenas import labmaze_textures
 from dmc_memory_maze.maze import (FixedFloorTexture, FixedWallTexture,
                                   MazeWithTargetsArena, MemoryMazeTask,
                                   RollingBallWithFriction)
-from dmc_memory_maze.wrappers import (DiscreteActionSetWrapper,
+from dmc_memory_maze.wrappers import (AbsolutePositionWrapper,
+                                      DiscreteActionSetWrapper,
                                       ImageOnlyObservationWrapper,
                                       RemapObservationWrapper,
                                       TargetColorAsBorderWrapper,
-                                      TargetPosWrapper)
+                                      TargetsVectorWrapper)
 
 # Slow control (4Hz), so that agent without HRL has a chance.
 # Native control would be 40Hz, so this corresponds roughly to action_repeat=10.
@@ -102,11 +103,15 @@ def _memory_maze(
         random_state=random_state,
         strip_singleton_obs_buffer_dim=True)
 
-    env = TargetPosWrapper(env)
+    env = TargetsVectorWrapper(env)
+    env = AbsolutePositionWrapper(env)
 
     env = RemapObservationWrapper(env, {
         'image': 'walker/egocentric_camera' if not top_camera else 'top_camera',
         'target_color': 'target_color',
+        'targets_vector': 'targets_vector',
+        'absolute_position': 'absolute_position',
+        'absolute_orientation': 'absolute_orientation',
     })
 
     if target_color_in_image:

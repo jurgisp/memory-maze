@@ -75,10 +75,11 @@ class RemapObservationWrapper(ObservationWrapper):
         return {key: obs[key_orig] for key, key_orig in self.mapping.items()}
 
 
-class TargetPosWrapper(ObservationWrapper):
-    """Collects and postporcesses walker/target_{i} vectors into targets_pos (n_targets,2) tensor."""
+class TargetsVectorWrapper(ObservationWrapper):
+    """Collects and postporcesses walker/target_{i} vectors into targets_vector (n_targets,2) tensor,
+    which indicates the relative position of all targets."""
 
-    def __init__(self, env: dm_env.Environment, key='targets_pos', xy_scale=2.0):
+    def __init__(self, env: dm_env.Environment, key='targets_vector', xy_scale=2.0):
         super().__init__(env)
         self.key = key
         self.xy_scale = xy_scale
@@ -102,6 +103,28 @@ class TargetPosWrapper(ObservationWrapper):
             x_raw = obs[f'walker/target_{i}']
             x[i] = x_raw[:2] / self.xy_scale
         obs[self.key] = x
+        return obs
+
+
+class AbsolutePositionWrapper(ObservationWrapper):
+    """Postprocesses absolute_position and absolute_orientation."""
+
+    def observation_spec(self):
+        spec = self.env.observation_spec()
+        assert isinstance(spec, dict)
+        # Change absolute_position from 3-vector to 2-vector
+        assert 'absolute_position' in spec
+        spec['absolute_position'] = specs.Array((2, ), float, 'absolute_position')
+        # Change absolute_orientation from 3x3 matrix to 2-vector
+        assert 'absolute_orientation' in spec
+        spec['absolute_orientation'] = specs.Array((2, ), float, 'absolute_orientation')
+        return spec
+
+    def observation(self, obs):
+        assert isinstance(obs, dict)
+        obs['absolute_position'] = obs['absolute_position'][:2]
+        # Pick orientation vector such, that going forward increases absolute_position in the direction of absolute_orientation.
+        obs['absolute_orientation'] = obs['absolute_orientation'][:2, 1]  
         return obs
 
 
