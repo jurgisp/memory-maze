@@ -2,15 +2,8 @@ import numpy as np
 from dm_control import composer
 from dm_control.locomotion.arenas import labmaze_textures
 
-from dmc_memory_maze.maze import (FixedFloorTexture, FixedWallTexture,
-                                  MazeWithTargetsArena, MemoryMazeTask,
-                                  RollingBallWithFriction)
-from dmc_memory_maze.wrappers import (AbsolutePositionWrapper,
-                                      DiscreteActionSetWrapper,
-                                      ImageOnlyObservationWrapper,
-                                      RemapObservationWrapper,
-                                      TargetColorAsBorderWrapper,
-                                      TargetsVectorWrapper)
+from dmc_memory_maze.maze import *
+from dmc_memory_maze.wrappers import *
 
 # Slow control (4Hz), so that agent without HRL has a chance.
 # Native control would be 40Hz, so this corresponds roughly to action_repeat=10.
@@ -116,10 +109,12 @@ def _memory_maze(
     if global_observables:
         env = TargetsVectorWrapper(env)
         env = AbsolutePositionWrapper(env)
+        env = MazeLayoutWrapper(env)
         obs_mapping = dict(obs_mapping, **{
             'targets_vector': 'targets_vector',
             'absolute_position': 'absolute_position',
             'absolute_orientation': 'absolute_orientation',
+            'maze_layout': 'maze_layout',
         })
 
     env = RemapObservationWrapper(env, obs_mapping)
