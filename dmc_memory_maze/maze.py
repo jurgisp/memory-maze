@@ -96,10 +96,17 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
                     origin_callable=xpos_origin_callable)
 
         self._task_observables = super().task_observables
-        target_color_obs = observable_lib.Generic(
-            lambda _: TARGET_COLORS[self._current_target_ix])
-        target_color_obs.enabled = True
-        self._task_observables['target_color'] = target_color_obs
+
+        def _current_target_index(_):
+            return self._current_target_ix
+
+        def _current_target_color(_):
+            return TARGET_COLORS[self._current_target_ix]
+
+        self._task_observables['target_index'] = observable_lib.Generic(_current_target_index)
+        self._task_observables['target_index'].enabled = True
+        self._task_observables['target_color'] = observable_lib.Generic(_current_target_color)
+        self._task_observables['target_color'].enabled = True
 
         self._walker.observables.egocentric_camera.height = camera_resolution
         self._walker.observables.egocentric_camera.width = camera_resolution
@@ -306,8 +313,8 @@ class TextMazeVaryingWalls(labmaze.RandomMaze):
 
     def _block_variations(self):
         nblocks = 3
-        wall_chars=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-        
+        wall_chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+
         n = self.entity_layer.shape[0]
         ivar = 0
         for i in range(nblocks):

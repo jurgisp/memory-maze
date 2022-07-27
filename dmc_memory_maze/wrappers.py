@@ -84,24 +84,34 @@ class TargetsPositionWrapper(ObservationWrapper):
         super().__init__(env)
         self.maze_xy_scale = maze_xy_scale
         self.center_ji = np.array([maze_width - 2.0, maze_height - 2.0]) / 2.0
-        
+
         spec = self.env.observation_spec()
-        assert isinstance(spec, dict) and 'walker/target_rel_0' in spec 
+        assert isinstance(spec, dict)
+        assert 'walker/target_rel_0' in spec
+        assert 'walker/target_abs_0' in spec
+        assert 'target_index' in spec
+
         i = 0
         while f'walker/target_rel_{i}' in spec:
             assert f'walker/target_abs_{i}' in spec
             i += 1
+
         self.n_targets = i
 
     def observation_spec(self):
         spec = self.env.observation_spec()
         assert isinstance(spec, dict)
+        # All targets
         spec['targets_vec'] = specs.Array((self.n_targets, 2), float, 'targets_vec')
         spec['targets_pos'] = specs.Array((self.n_targets, 2), float, 'targets_pos')
+        # Current target
+        spec['target_vec'] = specs.Array((2,), float, 'target_vec')
+        spec['target_pos'] = specs.Array((2,), float, 'target_pos')
         return spec
 
     def observation(self, obs):
         assert isinstance(obs, dict)
+        # All targets
         x_rel = np.zeros((self.n_targets, 2))
         x_abs = np.zeros((self.n_targets, 2))
         for i in range(self.n_targets):
@@ -109,6 +119,10 @@ class TargetsPositionWrapper(ObservationWrapper):
             x_abs[i] = obs[f'walker/target_abs_{i}'][:2] / self.maze_xy_scale + self.center_ji
         obs['targets_vec'] = x_rel
         obs['targets_pos'] = x_abs
+        # Current target
+        target_ix = int(obs['target_index'])
+        obs['target_vec'] = x_rel[target_ix]
+        obs['target_pos'] = x_abs[target_ix]
         return obs
 
 
@@ -134,7 +148,7 @@ class AgentPositionWrapper(ObservationWrapper):
         assert isinstance(obs, dict)
         walker_xy = obs['absolute_position'][:2]
         walker_ji = walker_xy / self.maze_xy_scale + self.center_ji
-        # agent_pos, measured in grid coordinates, where bottom-left coordinate is (0.1,0.1), 
+        # agent_pos, measured in grid coordinates, where bottom-left coordinate is (0.1,0.1),
         # and top-right coordinate for a 15x15 maze is (14.9,14.9)
         obs['agent_pos'] = walker_ji
         # Pick orientation vector such, that going forward increases agent_pos in the direction of agent_dir.

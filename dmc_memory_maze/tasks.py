@@ -111,10 +111,12 @@ def _memory_maze(
         env = AgentPositionWrapper(env, task._maze_arena.xy_scale, task._maze_arena.maze.width, task._maze_arena.maze.height)
         env = MazeLayoutWrapper(env)
         obs_mapping = dict(obs_mapping, **{
-            'targets_vec': 'targets_vec',
-            'targets_pos': 'targets_pos',
             'agent_pos': 'agent_pos',
             'agent_dir': 'agent_dir',
+            'targets_vec': 'targets_vec',
+            'targets_pos': 'targets_pos',
+            'target_vec': 'target_vec',
+            'target_pos': 'target_pos',
             'maze_layout': 'maze_layout',
         })
 
