@@ -75,38 +75,44 @@ class RemapObservationWrapper(ObservationWrapper):
         return {key: obs[key_orig] for key, key_orig in self.mapping.items()}
 
 
-class TargetsVectorWrapper(ObservationWrapper):
-    """Collects and postporcesses walker/target_{i} vectors into targets_vector (n_targets,2) tensor,
-    which indicates the relative position of all targets."""
+class TargetsPositionWrapper(ObservationWrapper):
+    """Collects and postporcesses walker/target_rel_{i} relative position vectors into 
+    targets_vec (n_targets,2) tensor, and walker/targets_abs_{i} absolute positions 
+    into targets_pos tensor."""
 
-    def __init__(self, env: dm_env.Environment, key='targets_vector', maze_xy_scale=2.0):
+    def __init__(self, env: dm_env.Environment, maze_xy_scale, maze_width, maze_height):
         super().__init__(env)
-        self.key = key
         self.maze_xy_scale = maze_xy_scale
+        self.center_ji = np.array([maze_width - 2.0, maze_height - 2.0]) / 2.0
+        
         spec = self.env.observation_spec()
-        assert isinstance(spec, dict) and 'walker/target_0' in spec
+        assert isinstance(spec, dict) and 'walker/target_rel_0' in spec 
         i = 0
-        while f'walker/target_{i}' in spec:
+        while f'walker/target_rel_{i}' in spec:
+            assert f'walker/target_abs_{i}' in spec
             i += 1
         self.n_targets = i
 
     def observation_spec(self):
         spec = self.env.observation_spec()
         assert isinstance(spec, dict)
-        spec[self.key] = specs.Array((self.n_targets, 2), float, self.key)
+        spec['targets_vec'] = specs.Array((self.n_targets, 2), float, 'targets_vec')
+        spec['targets_pos'] = specs.Array((self.n_targets, 2), float, 'targets_pos')
         return spec
 
     def observation(self, obs):
         assert isinstance(obs, dict)
-        x = np.zeros((self.n_targets, 2))
+        x_rel = np.zeros((self.n_targets, 2))
+        x_abs = np.zeros((self.n_targets, 2))
         for i in range(self.n_targets):
-            x_raw = obs[f'walker/target_{i}']
-            x[i] = x_raw[:2] / self.maze_xy_scale
-        obs[self.key] = x
+            x_rel[i] = obs[f'walker/target_rel_{i}'][:2] / self.maze_xy_scale
+            x_abs[i] = obs[f'walker/target_abs_{i}'][:2] / self.maze_xy_scale + self.center_ji
+        obs['targets_vec'] = x_rel
+        obs['targets_pos'] = x_abs
         return obs
 
 
-class AbsolutePositionWrapper(ObservationWrapper):
+class AgentPositionWrapper(ObservationWrapper):
     """Postprocesses absolute_position and absolute_orientation."""
 
     def __init__(self, env: dm_env.Environment, maze_xy_scale, maze_width, maze_height):

@@ -84,8 +84,14 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
                 return physics.bind(target.geom).xpos
 
             for i in range(n_targets):
+                # Absolute target position
+                walker.observables.add_observable(
+                    f'target_abs_{i}',
+                    observable_lib.Generic(functools.partial(_target_pos, target=self._targets[i])),
+                )
+                # Relative target position
                 walker.observables.add_egocentric_vector(
-                    f'target_{i}',
+                    f'target_rel_{i}',
                     observable_lib.Generic(functools.partial(_target_pos, target=self._targets[i])),
                     origin_callable=xpos_origin_callable)
 
