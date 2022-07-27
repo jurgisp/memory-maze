@@ -107,13 +107,13 @@ def _memory_maze(
         'target_color': 'target_color',
     }
     if global_observables:
-        env = TargetsVectorWrapper(env)
-        env = AbsolutePositionWrapper(env)
+        env = TargetsVectorWrapper(env, maze_xy_scale=task._maze_arena.xy_scale)
+        env = AbsolutePositionWrapper(env, task._maze_arena.xy_scale, task._maze_arena.maze.width, task._maze_arena.maze.height)
         env = MazeLayoutWrapper(env)
         obs_mapping = dict(obs_mapping, **{
             'targets_vector': 'targets_vector',
-            'absolute_position': 'absolute_position',
-            'absolute_orientation': 'absolute_orientation',
+            'agent_pos': 'agent_pos',
+            'agent_dir': 'agent_dir',
             'maze_layout': 'maze_layout',
         })
 
