@@ -4,6 +4,7 @@ from dm_control.locomotion.arenas import labmaze_textures
 
 from dmc_memory_maze.maze import *
 from dmc_memory_maze.wrappers import *
+from dmc_memory_maze.oracle import PathToTargetWrapper, DrawMinimapWrapper
 
 # Slow control (4Hz), so that agent without HRL has a chance.
 # Native control would be 40Hz, so this corresponds roughly to action_repeat=10.
@@ -55,14 +56,15 @@ def _memory_maze(
     room_max_size=5,
     control_freq=DEFAULT_CONTROL_FREQ,
     discrete_actions=True,
+    image_only_obs=False,
     target_color_in_image=True,
     global_observables=False,
     top_camera=False,
     good_visibility=False,
+    show_path=False,
     camera_resolution=64,
     random_state=None,
 ):
-    image_only_obs = target_color_in_image and not global_observables
     walker = RollingBallWithFriction(camera_height=0.3, add_ears=top_camera)
     arena = MazeWithTargetsArena(
         x_cells=maze_size + 2,  # inner size => outer size
@@ -124,6 +126,11 @@ def _memory_maze(
 
     if target_color_in_image:
         env = TargetColorAsBorderWrapper(env)
+    
+    if show_path:
+        env = PathToTargetWrapper(env)
+        env = DrawMinimapWrapper(env)
+
     if image_only_obs:
         assert target_color_in_image, 'Image-only observation only makes sense with target_color_in_image'
         env = ImageOnlyObservationWrapper(env)

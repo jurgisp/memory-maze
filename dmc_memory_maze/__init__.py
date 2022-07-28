@@ -26,20 +26,24 @@ try:
 
     for key, dm_task in sizes.items():
         # Image-only obs space
-        register(id=f'MemoryMaze-{key}-v0', entry_point=f(_make_gym_env, dm_task))  # Standard
-        register(id=f'MemoryMaze-{key}-Vis-v0', entry_point=f(_make_gym_env, dm_task, good_visibility=True))  # Easily visible targets
-        register(id=f'MemoryMaze-{key}-HD-v0', entry_point=f(_make_gym_env, dm_task, camera_resolution=256))  # High-res camera
-        register(id=f'MemoryMaze-{key}-Top-v0', entry_point=f(_make_gym_env, dm_task, camera_resolution=256, top_camera=True))  # Top-down camera
+        register(id=f'MemoryMaze-{key}-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True))  # Standard
+        register(id=f'MemoryMaze-{key}-Vis-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, good_visibility=True))  # Easily visible targets
+        register(id=f'MemoryMaze-{key}-HD-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, camera_resolution=256))  # High-res camera
+        register(id=f'MemoryMaze-{key}-Top-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, camera_resolution=256, top_camera=True))  # Top-down camera
         
         # Extra global observables (dict obs space)
         register(id=f'MemoryMaze-{key}-ExtraObs-v0', entry_point=f(_make_gym_env, dm_task, global_observables=True))
         register(id=f'MemoryMaze-{key}-ExtraObs-Vis-v0', entry_point=f(_make_gym_env, dm_task, global_observables=True, good_visibility=True))
         register(id=f'MemoryMaze-{key}-ExtraObs-Top-v0', entry_point=f(_make_gym_env, dm_task, global_observables=True, camera_resolution=256, top_camera=True))
         
+        # Oracle observables with shortest path shown
+        register(id=f'MemoryMaze-{key}-Oracle-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, global_observables=True, show_path=True))
+        register(id=f'MemoryMaze-{key}-Oracle-Top-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, global_observables=True, show_path=True, camera_resolution=256, top_camera=True))
+        
         # High control frequency
-        register(id=f'MemoryMaze-{key}-HiFreq-v0', entry_point=f(_make_gym_env, dm_task, control_freq=40))
-        register(id=f'MemoryMaze-{key}-HiFreq-Vis-v0', entry_point=f(_make_gym_env, dm_task, control_freq=40, good_visibility=True))
-        register(id=f'MemoryMaze-{key}-HiFreq-HD-v0', entry_point=f(_make_gym_env, dm_task, control_freq=40, camera_resolution=256))
+        register(id=f'MemoryMaze-{key}-HiFreq-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, control_freq=40))
+        register(id=f'MemoryMaze-{key}-HiFreq-Vis-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, control_freq=40, good_visibility=True))
+        register(id=f'MemoryMaze-{key}-HiFreq-HD-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, control_freq=40, camera_resolution=256))
 
 
 except ImportError:
