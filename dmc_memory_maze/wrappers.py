@@ -216,13 +216,12 @@ class TargetColorAsBorderWrapper(ObservationWrapper):
         spec = self.env.observation_spec()
         assert isinstance(spec, dict)
         assert 'target_color' in spec
-        spec.pop('target_color')
         return spec
 
     def observation(self, obs):
         assert isinstance(obs, dict)
         assert 'target_color' in obs and 'image' in obs
-        target_color = obs.pop('target_color')
+        target_color = obs['target_color']
         img = obs['image']
         B = int(2 * np.sqrt(img.shape[0] // 64))
         img[:, :B] = target_color * 255 * 0.7
