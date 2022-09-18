@@ -7,7 +7,7 @@ from dmc_memory_maze.wrappers import *
 from dmc_memory_maze.oracle import PathToTargetWrapper, DrawMinimapWrapper
 
 # Slow control (4Hz), so that agent without HRL has a chance.
-# Native control would be 40Hz, so this corresponds roughly to action_repeat=10.
+# Native control would be ~20Hz, so this corresponds roughly to action_repeat=5.
 DEFAULT_CONTROL_FREQ = 4
 
 

@@ -39,6 +39,7 @@ try:
         # Oracle observables with shortest path shown
         register(id=f'MemoryMaze-{key}-Oracle-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, global_observables=True, show_path=True))
         register(id=f'MemoryMaze-{key}-Oracle-Top-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, global_observables=True, show_path=True, camera_resolution=256, top_camera=True))
+        register(id=f'MemoryMaze-{key}-Oracle-ExtraObs-v0', entry_point=f(_make_gym_env, dm_task, global_observables=True, show_path=True))
         
         # High control frequency
         register(id=f'MemoryMaze-{key}-HiFreq-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, control_freq=40))
