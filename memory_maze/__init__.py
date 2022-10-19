@@ -48,5 +48,5 @@ try:
 
 
 except ImportError:
-    print('dmc_memory_maze: gym environments not registered.')
+    print('memory_maze: gym environments not registered.')
     raise

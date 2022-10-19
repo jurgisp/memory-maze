@@ -2,9 +2,9 @@ import numpy as np
 from dm_control import composer
 from dm_control.locomotion.arenas import labmaze_textures
 
-from dmc_memory_maze.maze import *
-from dmc_memory_maze.wrappers import *
-from dmc_memory_maze.oracle import PathToTargetWrapper, DrawMinimapWrapper
+from memory_maze.maze import *
+from memory_maze.wrappers import *
+from memory_maze.oracle import PathToTargetWrapper, DrawMinimapWrapper
 
 # Slow control (4Hz), so that agent without HRL has a chance.
 # Native control would be ~20Hz, so this corresponds roughly to action_repeat=5.

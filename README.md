@@ -1,4 +1,4 @@
-# dmc-memory-maze
+# memory-maze
 
 Memory Maze environment for RL based on [dm_control](https://github.com/deepmind/dm_control).
 
@@ -41,7 +41,7 @@ Note that the mazes are generated with [labmaze](https://github.com/deepmind/lab
 
 The environment is available as a pip package
 ```
-pip install git+https://github.com/jurgisp/dmc-memory-maze.git#egg=dmc-memory-maze
+pip install git+https://github.com/jurgisp/memory-maze.git#egg=memory-maze
 ```
 It will automatically install [`dm_control`](https://github.com/deepmind/dm_control) and [`mujoco`](https://github.com/deepmind/mujoco) dependencies.
 
@@ -52,10 +52,10 @@ Once pip package is installed, the environment can be created using [Gym](https:
 ```python
 import gym
 
-env = gym.make('dmc_memory_maze:MemoryMaze-9x9-v0')
-env = gym.make('dmc_memory_maze:MemoryMaze-11x11-v0')
-env = gym.make('dmc_memory_maze:MemoryMaze-13x13-v0')
-env = gym.make('dmc_memory_maze:MemoryMaze-15x15-v0')
+env = gym.make('memory_maze:MemoryMaze-9x9-v0')
+env = gym.make('memory_maze:MemoryMaze-11x11-v0')
+env = gym.make('memory_maze:MemoryMaze-13x13-v0')
+env = gym.make('memory_maze:MemoryMaze-15x15-v0')
 ```
 
 This default environment has dictionary observation space (TODO: map, targets)
@@ -66,17 +66,17 @@ Dict(image: Box(0, 255, (64, 64, 3), uint8))
 
 In order to make an environment with pure image observation, which may be expected by default RL implementations, add the `-Img-v0` suffix to the env id:
 ```python
-env = gym.make('dmc_memory_maze:MemoryMaze-9x9-Img-v0')
+env = gym.make('memory_maze:MemoryMaze-9x9-Img-v0')
 ```
 
-There are other helper variations of the environment, see [here](dmc_memory_maze/__init__.py).
+There are other helper variations of the environment, see [here](memory_maze/__init__.py).
 
 ## dm_env interface
 
 We also provide [dm_env](https://github.com/deepmind/dm_env) API implementation:
 
 ```python
-from dmc_memory_maze import tasks
+from memory_maze import tasks
 
 env = tasks.memory_maze_9x9()
 env = tasks.memory_maze_11x11()
@@ -113,10 +113,10 @@ There is also a graphical UI provided, which can be launched as:
 pip install pygame pillow
 
 # The default view, that the agent sees
-python gui/run_gui.py --fps=6 --env "dmc_memory_maze:MemoryMaze-15x15-v0"
+python gui/run_gui.py --fps=6 --env "memory_maze:MemoryMaze-15x15-v0"
 
 # Higher resolution and higher control frequency, nicer for human control
-python gui/run_gui.py --fps=60 --env "dmc_memory_maze:MemoryMaze-15x15-HiFreq-HD-v0"
+python gui/run_gui.py --fps=60 --env "memory_maze:MemoryMaze-15x15-HiFreq-HD-v0"
 ```
 
 ## Observation space, Action space

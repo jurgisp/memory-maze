@@ -2,7 +2,7 @@ from collections import deque
 from typing import List, Optional, Tuple
 import numpy as np
 
-from dmc_memory_maze.wrappers import ObservationWrapper
+from memory_maze.wrappers import ObservationWrapper
 
 
 class PathToTargetWrapper(ObservationWrapper):
