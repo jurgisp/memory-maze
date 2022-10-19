@@ -50,6 +50,7 @@ It will automatically install [`dm_control`](https://github.com/deepmind/dm_cont
 Once pip package is installed, the environment can be created using [Gym](https://github.com/openai/gym) interface
 
 ```python
+!pip install gym
 import gym
 
 env = gym.make('memory_maze:MemoryMaze-9x9-v0')
@@ -110,7 +111,7 @@ env = tasks.memory_maze_9x9(
 There is also a graphical UI provided, which can be launched as:
 
 ```bash
-pip install pygame pillow
+pip install gym pygame pillow imageio
 
 # The default view, that the agent sees
 python gui/run_gui.py --fps=6 --env "memory_maze:MemoryMaze-15x15-v0"
