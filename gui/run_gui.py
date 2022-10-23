@@ -33,7 +33,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='memory_maze:MemoryMaze-9x9-v0')
     parser.add_argument('--size', type=int, nargs=2, default=(600, 600))
-    parser.add_argument('--fps', type=int, default=10)
+    parser.add_argument('--fps', type=int, default=6)
     parser.add_argument('--random', type=float, default=0.0)
     parser.add_argument('--noreset', action='store_true')
     parser.add_argument('--fullscreen', action='store_true')
