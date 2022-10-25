@@ -21,14 +21,14 @@ Key features:
 - Interactive GUI for human players
 - Hidden state information for probe evaluation
 
-Also see the accompanying research paper: [Evaluating Long-Term Memory in 3D Mazes](https://arxiv.org/TODO)
+Also see the accompanying research paper: [Evaluating Long-Term Memory in 3D Mazes](https://arxiv.org/abs/2210.13383)
 
 ```
 @article{pasukonis2022memmaze,
   title={Evaluating Long-Term Memory in 3D Mazes},
-  author={Jurgis Pasukonis, Timothy Lillicrap, Danijar Hafner},
-  year={2022},
-  journal={arXiv preprint arXiv:2210.xxxxx},
+  author={Pasukonis, Jurgis and Lillicrap, Timothy and Hafner, Danijar},
+  journal={arXiv preprint arXiv:2210.13383},
+  year={2022}
 }
 ```
 
@@ -158,7 +158,7 @@ env = tasks.memory_maze_9x9(
     image_only_obs=False,
     top_camera=False,
     camera_resolution=64,
-    control_freq=4,
+    control_freq=4.0,
     discrete_actions=True,
 )
 ```
@@ -201,7 +201,7 @@ All tensors have a leading time dimension, e.g. `image` tensor has shape (1001, 
 
 ## Online RL Baselines
 
-In our [research paper](https://arxiv.org/TODO), we evaluate the model-free [IMPALA](https://github.com/google-research/seed_rl/tree/master/agents/vtrace) agent and the model-based [Dreamer](https://github.com/jurgisp/pydreamer) agent as baselines.
+In our [research paper](https://arxiv.org/abs/2210.13383), we evaluate the model-free [IMPALA](https://github.com/google-research/seed_rl/tree/master/agents/vtrace) agent and the model-based [Dreamer](https://github.com/jurgisp/pydreamer) agent as baselines.
 
 <p align="center">
   <img width="650" alt="baselines" src="https://user-images.githubusercontent.com/3135115/197349778-74073613-bf6c-449b-b5c2-07adf21030ff.png">
@@ -229,7 +229,7 @@ https://user-images.githubusercontent.com/3135115/197378936-939e7615-9dad-4765-b
 
 ## Offline Probing Baselines
 
-Here we visualize probe predictions alongside trajectories of the offline dataset, as explained in [the paper](https://arxiv.org/TODO). These trajectories are from the offline dataset, where the agent just navigates to random points in the maze, it does *not* try to collect rewards.
+Here we visualize probe predictions alongside trajectories of the offline dataset, as explained in [the paper](https://arxiv.org/abs/2210.13383). These trajectories are from the offline dataset, where the agent just navigates to random points in the maze, it does *not* try to collect rewards.
 
 Bottom-left: Object location predictions (x) versus the actual locations (o).
 
