@@ -88,11 +88,16 @@ You can create the environment using the [Gym](https://github.com/openai/gym) in
 !pip install gym
 import gym
 
+# Set this if you are getting "Unable to load EGL library" error:
+#  os.environ['MUJOCO_GL'] = 'glfw'  
+
 env = gym.make('memory_maze:MemoryMaze-9x9-v0')
 env = gym.make('memory_maze:MemoryMaze-11x11-v0')
 env = gym.make('memory_maze:MemoryMaze-13x13-v0')
 env = gym.make('memory_maze:MemoryMaze-15x15-v0')
 ```
+
+**Troubleshooting:** if you are getting "Unable to load EGL library error", that is because we enable MuJoCo headless GPU rendering (`MUJOCO_GL=egl`) by default. If you are testing locally on your machine, you can enable windowed rendering instead (`MUJOCO_GL=glfw`). [Read here](https://github.com/deepmind/dm_control#rendering) about the different rendering options. 
 
 The default environment has 64x64 image observations:
 
