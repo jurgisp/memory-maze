@@ -1,3 +1,4 @@
+import os
 
 import argparse
 from collections import defaultdict
@@ -10,6 +11,9 @@ from gym import spaces
 from PIL import Image
 
 from recording import SaveNpzWrapper
+
+if 'MUJOCO_GL' not in os.environ:
+    os.environ['MUJOCO_GL'] = 'glfw'  # Windowed rendering
 
 PANEL_LEFT = 250
 PANEL_RIGHT = 250
@@ -80,7 +84,7 @@ def main():
     clock = pygame.time.Clock()
     font = pygame.freetype.SysFont('Mono', 16)
     fontsmall = pygame.freetype.SysFont('Mono', 12)
-    
+
     running = True
     paused = False
     speedup = False
@@ -197,6 +201,7 @@ def obs_to_text(obs, env, steps, return_):
     kvs.append(('return', return_))
     lines = [f'{k:<15} {v:>5}' for k, v in kvs]
     return lines
+
 
 def keymap_to_text(keymap, verbose=False):
     kvs = []
