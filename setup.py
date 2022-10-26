@@ -1,7 +1,7 @@
 from setuptools import setup
 import pathlib
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 setup(
     name="memory-maze",
