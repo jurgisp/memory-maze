@@ -1,14 +1,16 @@
+import os
+
 import numpy as np
 from dm_control import composer
 from dm_control.locomotion.arenas import labmaze_textures
 
 from memory_maze.maze import *
+from memory_maze.oracle import DrawMinimapWrapper, PathToTargetWrapper
 from memory_maze.wrappers import *
-from memory_maze.oracle import PathToTargetWrapper, DrawMinimapWrapper
 
 # Slow control (4Hz), so that agent without HRL has a chance.
 # Native control would be ~20Hz, so this corresponds roughly to action_repeat=5.
-DEFAULT_CONTROL_FREQ = 4
+DEFAULT_CONTROL_FREQ = 4.0
 
 
 def memory_maze_9x9(**kwargs):
@@ -65,6 +67,11 @@ def _memory_maze(
     camera_resolution=64,
     random_state=None,
 ):
+    # TODO: This env variable is necessary when running on a headless GPU but
+    # breaks when running on a CPU machine.
+    if 'MUJOCO_GL' not in os.environ:
+        os.environ['MUJOCO_GL'] = 'egl'
+
     walker = RollingBallWithFriction(camera_height=0.3, add_ears=top_camera)
     arena = MazeWithTargetsArena(
         x_cells=maze_size + 2,  # inner size => outer size
@@ -126,7 +133,7 @@ def _memory_maze(
 
     if target_color_in_image:
         env = TargetColorAsBorderWrapper(env)
-    
+
     if show_path:
         env = PathToTargetWrapper(env)
         env = DrawMinimapWrapper(env)
