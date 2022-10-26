@@ -1,5 +1,3 @@
-import os
-
 import numpy as np
 from dm_control import composer
 from dm_control.locomotion.arenas import labmaze_textures
@@ -67,11 +65,6 @@ def _memory_maze(
     camera_resolution=64,
     random_state=None,
 ):
-    # TODO: This env variable is necessary when running on a headless GPU but
-    # breaks when running on a CPU machine.
-    if 'MUJOCO_GL' not in os.environ:
-        os.environ['MUJOCO_GL'] = 'egl'
-
     walker = RollingBallWithFriction(camera_height=0.3, add_ears=top_camera)
     arena = MazeWithTargetsArena(
         x_cells=maze_size + 2,  # inner size => outer size

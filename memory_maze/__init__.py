@@ -1,3 +1,9 @@
+import os
+
+# NOTE: Env MUJOCO_GL=egl is necessary for headless hardware rendering on GPU,
+# but breaks when running on a CPU machine. Alternatively set MUJOCO_GL=osmesa.
+if 'MUJOCO_GL' not in os.environ:
+    os.environ['MUJOCO_GL'] = 'egl'
 
 from . import tasks
 
