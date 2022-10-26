@@ -55,6 +55,19 @@ python gui/run_gui.py
 python gui/run_gui.py --env "memory_maze:MemoryMaze-9x9-HD-v0"
 ```
 
+## Running on a headless server
+
+To run on a headless server, the environment variable `MUJOCO_GL` needs to be set to `egl`.
+It can also be set in the python script as follows:
+```python
+import os
+os.environ['MUJOCO_GL'] = 'egl'
+
+env = gym.make('memory_maze:MemoryMaze-9x9-v0')
+
+print(env.observation_space, env.action_space)
+```
+
 ## Task Description
 
 The task is based on a game known as scavenger hunt or treasure hunt:
