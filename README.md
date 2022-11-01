@@ -170,7 +170,7 @@ env = tasks.memory_maze_9x9(
 
 ## Offline Dataset
 
-[**Dataset download here** (~100GB per dataset)](https://www.dropbox.com/sh/c38sc5h7ltgyyzc/AAARVeKgnyaoBLGdYYVABh_Ja)
+[**Dataset download here** (~100GB per dataset)](https://drive.google.com/drive/folders/1RcnkTZVwEHnAQeEuw7X8Y1RPSmrFLDFB)
 
 We provide two datasets of experience collected from the Memory Maze environment: Memory Maze 9x9 (30M) and Memory Maze 15x15 (30M). Each dataset contains 30 thousand trajectories from Memory Maze 9x9 and 15x15 environments respectively, split into 29k trajectories for training and 1k for evaluation. All trajectories are 1000 steps long, so each dataset has 30M steps total.
 
