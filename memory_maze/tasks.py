@@ -63,8 +63,9 @@ def _memory_maze(
     good_visibility=False,
     show_path=False,
     camera_resolution=64,
-    random_state=None,
+    seed=None,
 ):
+    random_state = np.random.RandomState(seed)
     walker = RollingBallWithFriction(camera_height=0.3, add_ears=top_camera)
     arena = MazeWithTargetsArena(
         x_cells=maze_size + 2,  # inner size => outer size
@@ -82,6 +83,7 @@ def _memory_maze(
         }, **{str(i): labmaze_textures.WallTextures('style_01') for i in range(10)}  # variations
         ),
         skybox_texture=None,
+        random_seed=random_state.randint(2147483648),
     )
 
     task = MemoryMazeTask(

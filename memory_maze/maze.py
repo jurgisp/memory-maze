@@ -122,12 +122,12 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
         return 'memory_maze'
 
     def initialize_episode_mjcf(self, rng: RandomState):
-        super().initialize_episode_mjcf(rng)
+        self._maze_arena.regenerate(rng)  # Bypass super()._initialize_episode_mjcf(), because it ignores rng
         while True:
             ok = self._place_targets(rng)
             if not ok:
                 # Could not place targets - regenerate the maze
-                self._maze_arena.regenerate()
+                self._maze_arena.regenerate(rng)
                 continue
             break
         self._pick_new_target(rng)
@@ -227,8 +227,9 @@ class MazeWithTargetsArena(mazes.MazeWithTargets):
                wall_textures=None,
                floor_textures=None,
                aesthetic='default',
-               name='random_maze'):
-        random_seed = np.random.randint(2147483648)
+               name='random_maze',
+               random_seed=None):
+        assert random_seed, "Expected to be set by tasks._memory_maze()"
         super()._build(
             maze=TextMazeVaryingWalls(
                 height=y_cells,
@@ -248,6 +249,41 @@ class MazeWithTargetsArena(mazes.MazeWithTargets):
             floor_textures=floor_textures,
             aesthetic=aesthetic,
             name=name)
+
+    def regenerate(self, random_state):
+        """Generates a new maze layout.
+        
+        Patch of MazeWithTargets.regenerate() which uses random_state.
+        """
+        self._maze.regenerate()
+        # logging.debug('GENERATED MAZE:\n%s', self._maze.entity_layer)
+        self._find_spawn_and_target_positions()
+
+        if self._text_maze_regenerated_hook:
+            self._text_maze_regenerated_hook()
+
+        # Remove old texturing planes.
+        for geom_name in self._texturing_geom_names:
+            del self._mjcf_root.worldbody.geom[geom_name]
+        self._texturing_geom_names = []
+
+        # Remove old texturing materials.
+        for material_name in self._texturing_material_names:
+            del self._mjcf_root.asset.material[material_name]
+        self._texturing_material_names = []
+
+        # Remove old actual-wall geoms.
+        self._maze_body.geom.clear()
+
+        self._current_wall_texture = {
+            wall_char: random_state.choice(wall_textures)  # PATCH: use random_state for wall textures
+            for wall_char, wall_textures in self._wall_textures.items()
+        }
+
+        for wall_char in self._wall_textures:
+            self._make_wall_geoms(wall_char)
+        self._make_floor_variations()
+
 
     def _make_floor_variations(self, build_tile_geoms_fn=None):
         """Fork of mazes.MazeWithTargets._make_floor_variations().
