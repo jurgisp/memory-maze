@@ -1,3 +1,4 @@
+from typing import Optional
 import functools
 import string
 
@@ -45,6 +46,7 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
                  target_radius=0.3,
                  target_height_above_ground=0.0,
                  target_reward_scale=1.0,
+                 target_randomize_colors=False,
                  enable_global_task_observables=False,
                  camera_resolution=64,
                  physics_timestep=DEFAULT_PHYSICS_TIMESTEP,
@@ -64,8 +66,10 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
         self._target_radius = target_radius
         self._target_height_above_ground = target_height_above_ground
         self._target_reward_scale = target_reward_scale
+        self._target_randomize_colors = target_randomize_colors
 
         self._targets = []
+        self._target_colors = list(TARGET_COLORS)  # This contains all colors, not only n_targets
         self._create_targets()
         self._current_target_ix = 0
         self._rewarded_this_step = False
@@ -96,7 +100,7 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
             return self._current_target_ix
 
         def _current_target_color(_):
-            return TARGET_COLORS[self._current_target_ix]
+            return self._target_colors[self._current_target_ix]
 
         self._task_observables['target_index'] = observable_lib.Generic(_current_target_index)
         self._task_observables['target_index'].enabled = True
@@ -107,25 +111,6 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
         self._walker.observables.egocentric_camera.width = camera_resolution
         self._maze_arena.observables.top_camera.height = camera_resolution
         self._maze_arena.observables.top_camera.width = camera_resolution
-
-    def _create_targets(self, clear_existing=False):
-        if clear_existing:
-            while self._targets:
-                target = self._targets.pop()
-                target.detach()  # Important to detach old targets, if creating new ones
-        else:
-            assert not self._targets, 'Targets already created.'
-
-        for i in range(self.n_targets):
-            color = TARGET_COLORS[i]
-            target = target_sphere.TargetSphere(
-                radius=self._target_radius,
-                height_above_ground=self._target_radius + self._target_height_above_ground,
-                rgb1=tuple(color * 1.0),
-                rgb2=tuple(color * 1.0),
-            )
-            self._targets.append(target)
-            self._maze_arena.attach(target)
 
     @property
     def task_observables(self):
@@ -138,6 +123,9 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
     def initialize_episode_mjcf(self, rng: RandomState):
         self._maze_arena.regenerate(rng)  # Bypass super()._initialize_episode_mjcf(), because it ignores rng
         while True:
+            if self._target_randomize_colors:
+                # Recreate target objects with new colors
+                self._create_targets(clear_existing=True, randomize_colors=True, rng=rng)
             ok = self._place_targets(rng)
             if not ok:
                 # Could not place targets - regenerate the maze
@@ -169,6 +157,29 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
         if self._rewarded_this_step:
             return self._target_reward_scale
         return 0.0
+
+    def _create_targets(self, clear_existing=False, randomize_colors=False, rng: Optional[RandomState] = None):
+        if clear_existing:
+            while self._targets:
+                target = self._targets.pop()
+                target.detach()  # Important to detach old targets, if creating new ones
+        else:
+            assert not self._targets, 'Targets already created.'
+
+        if randomize_colors:
+            assert rng is not None
+            rng.shuffle(self._target_colors)
+
+        for i in range(self.n_targets):
+            color = self._target_colors[i]
+            target = target_sphere.TargetSphere(
+                radius=self._target_radius,
+                height_above_ground=self._target_radius + self._target_height_above_ground,
+                rgb1=tuple(color * 1.0),
+                rgb2=tuple(color * 1.0),
+            )
+            self._targets.append(target)
+            self._maze_arena.attach(target)
 
     def _place_targets(self, rng: RandomState) -> bool:
         possible_positions = list(self._maze_arena.target_positions)
@@ -266,7 +277,7 @@ class MazeWithTargetsArena(mazes.MazeWithTargets):
 
     def regenerate(self, random_state):
         """Generates a new maze layout.
-        
+
         Patch of MazeWithTargets.regenerate() which uses random_state.
         """
         self._maze.regenerate()
@@ -297,7 +308,6 @@ class MazeWithTargetsArena(mazes.MazeWithTargets):
         for wall_char in self._wall_textures:
             self._make_wall_geoms(wall_char)
         self._make_floor_variations()
-
 
     def _make_floor_variations(self, build_tile_geoms_fn=None):
         """Fork of mazes.MazeWithTargets._make_floor_variations().
