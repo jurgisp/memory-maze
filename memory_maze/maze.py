@@ -60,18 +60,13 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
             physics_timestep=physics_timestep,
             control_timestep=control_timestep
         )
+        self.n_targets = n_targets
+        self._target_radius = target_radius
+        self._target_height_above_ground = target_height_above_ground
         self._target_reward_scale = target_reward_scale
+
         self._targets = []
-        for i in range(n_targets):
-            color = TARGET_COLORS[i]
-            target = target_sphere.TargetSphere(
-                radius=target_radius,
-                height_above_ground=target_radius + target_height_above_ground,
-                rgb1=tuple(color * 1.0),
-                rgb2=tuple(color * 1.0),
-            )
-            self._targets.append(target)
-            self._maze_arena.attach(target)
+        self._create_targets()
         self._current_target_ix = 0
         self._rewarded_this_step = False
         self._targets_obtained = 0
@@ -80,19 +75,19 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
             # Add egocentric vectors to targets
             xpos_origin_callable = lambda phys: phys.bind(walker.root_body).xpos
 
-            def _target_pos(physics, target):
-                return physics.bind(target.geom).xpos
+            def _target_pos(physics, targets, index):
+                return physics.bind(targets[index].geom).xpos
 
             for i in range(n_targets):
                 # Absolute target position
                 walker.observables.add_observable(
                     f'target_abs_{i}',
-                    observable_lib.Generic(functools.partial(_target_pos, target=self._targets[i])),
+                    observable_lib.Generic(functools.partial(_target_pos, targets=self._targets, index=i)),
                 )
                 # Relative target position
                 walker.observables.add_egocentric_vector(
                     f'target_rel_{i}',
-                    observable_lib.Generic(functools.partial(_target_pos, target=self._targets[i])),
+                    observable_lib.Generic(functools.partial(_target_pos, targets=self._targets, index=i)),
                     origin_callable=xpos_origin_callable)
 
         self._task_observables = super().task_observables
@@ -112,6 +107,25 @@ class MemoryMazeTask(random_goal_maze.NullGoalMaze):
         self._walker.observables.egocentric_camera.width = camera_resolution
         self._maze_arena.observables.top_camera.height = camera_resolution
         self._maze_arena.observables.top_camera.width = camera_resolution
+
+    def _create_targets(self, clear_existing=False):
+        if clear_existing:
+            while self._targets:
+                target = self._targets.pop()
+                target.detach()  # Important to detach old targets, if creating new ones
+        else:
+            assert not self._targets, 'Targets already created.'
+
+        for i in range(self.n_targets):
+            color = TARGET_COLORS[i]
+            target = target_sphere.TargetSphere(
+                radius=self._target_radius,
+                height_above_ground=self._target_radius + self._target_height_above_ground,
+                rgb1=tuple(color * 1.0),
+                rgb2=tuple(color * 1.0),
+            )
+            self._targets.append(target)
+            self._maze_arena.attach(target)
 
     @property
     def task_observables(self):
