@@ -64,6 +64,7 @@ def _memory_maze(
     show_path=False,
     camera_resolution=64,
     seed=None,
+    randomize_colors=False,
 ):
     random_state = np.random.RandomState(seed)
     walker = RollingBallWithFriction(camera_height=0.3, add_ears=top_camera)
@@ -95,6 +96,7 @@ def _memory_maze(
         enable_global_task_observables=True,  # Always add to underlying env, but not always expose in RemapObservationWrapper
         control_timestep=1.0 / control_freq,
         camera_resolution=camera_resolution,
+        target_randomize_colors=randomize_colors,
     )
 
     if top_camera:

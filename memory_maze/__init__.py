@@ -52,6 +52,12 @@ try:
         register(id=f'MemoryMaze-{key}-HiFreq-Vis-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, control_freq=40, good_visibility=True))
         register(id=f'MemoryMaze-{key}-HiFreq-HD-v0', entry_point=f(_make_gym_env, dm_task, image_only_obs=True, control_freq=40, camera_resolution=256))
 
+        # Six colors even for smaller mazes
+        register(id=f'MemoryMaze-{key}-6CL-v0', entry_point=f(_make_gym_env, dm_task, randomize_colors=True, image_only_obs=True))
+        register(id=f'MemoryMaze-{key}-6CL-Top-v0', entry_point=f(_make_gym_env, dm_task, randomize_colors=True, image_only_obs=True, camera_resolution=256, top_camera=True))
+        register(id=f'MemoryMaze-{key}-6CL-ExtraObs-v0', entry_point=f(_make_gym_env, dm_task, randomize_colors=True, global_observables=True))
+        
+
 
 except ImportError:
     print('memory_maze: gym environments not registered.')
