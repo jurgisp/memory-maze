@@ -1,4 +1,4 @@
-import os
+import os, sys
 
 import argparse
 from collections import defaultdict
@@ -13,7 +13,10 @@ from PIL import Image
 from recording import SaveNpzWrapper
 
 if 'MUJOCO_GL' not in os.environ:
-    os.environ['MUJOCO_GL'] = 'glfw'  # Windowed rendering
+    if "linux" in sys.platform:
+        os.environ['MUJOCO_GL'] = 'osmesa' # Software rendering to avoid rendering interference with pygame
+    else:
+        os.environ['MUJOCO_GL'] = 'glfw'  # Windowed rendering
 
 PANEL_LEFT = 250
 PANEL_RIGHT = 250
